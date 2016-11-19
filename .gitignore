@@ -1,0 +1,17 @@
+**/*.vcxproj.user
+**/*.VC.db
+**/*.VC.opendb
+**/*.suo
+**/CMakeCache.txt
+**/CMakeFiles
+**/Makefile
+**/cmake_install.cmake
+**/install_manifest.txt
+.vs
+.vscode
+obj
+bin
+lib
+ipch
+build
+src/core/obj
