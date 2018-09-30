@@ -149,7 +149,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\boost_1_66_0\;$(SolutionDir)f8n\src\3rdparty\include\;$(SolutionDir)f8n\src\3rdparty\win32_include\;$(SolutionDir)f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\boost_1_66_0\;$(ProjectDir)..\f8n\src\3rdparty\include\;$(ProjectDir)..\f8n\src\3rdparty\win32_include\;$(ProjectDir)..\f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NOMINMAX;UNICODE;_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -172,7 +172,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>WIN32;NOMINMAX;UNICODE;_UNICODE</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\boost_1_66_0\;$(SolutionDir)f8n\src\3rdparty\include\;$(SolutionDir)f8n\src\3rdparty\win32_include\;$(SolutionDir)f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\boost_1_66_0\;$(ProjectDir)..\f8n\src\3rdparty\include\;$(ProjectDir)..\f8n\src\3rdparty\win32_include\;$(ProjectDir)..\f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
