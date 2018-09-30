@@ -16,3 +16,5 @@ ipch
 build
 src/Debug
 src/Release
+src/build
+output
