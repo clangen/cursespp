@@ -32,33 +32,46 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/OverlayBase.h>
+#include <f8n/runtime/IMessage.h>
+#include <vector>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class ToastOverlay :
+        public OverlayBase,
+        public sigslot::has_slots<>
+#if (__clang_major__ == 7 && __clang_minor__ == 3)
+        , public std::enable_shared_from_this<ToastOverlay>
+#endif
+    {
+        public:
+            static void Show(const std::string& text, long durationMs = 3000);
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+            virtual ~ToastOverlay();
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+            ToastOverlay(const ToastOverlay& other) = delete;
+            ToastOverlay& operator=(const ToastOverlay& other) = delete;
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+            virtual void Layout() override;
+            virtual bool KeyPress(const std::string& key) override;
+            virtual void ProcessMessage(f8n::runtime::IMessage &message) override;
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
+        protected:
+            virtual void OnVisibilityChanged(bool visible) override;
 
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+        private:
+            ToastOverlay(const std::string& text, long durationMs);
+
+            virtual void OnRedraw() override;
+            void RecalculateSize();
+
+            bool ticking;
+            std::string title;
+            std::vector<std::string> titleLines;
+            int durationMs;
+            int x, y;
+            int width, height;
+    };
 }

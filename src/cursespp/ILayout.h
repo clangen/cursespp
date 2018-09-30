@@ -32,33 +32,46 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/IWindowGroup.h>
+#include <cursespp/IDisplayable.h>
+#include <cursespp/IKeyHandler.h>
+#include <cursespp/IMouseHandler.h>
+#include <memory>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class ILayout:
+        public IWindowGroup,
+        public IKeyHandler,
+        public IMouseHandler,
+        public IOrderable,
+        public IDisplayable
+    {
+        public:
+            enum FocusMode {
+                FocusModeCircular = 0,
+                FocusModeTerminating = 1
+            };
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+            virtual ~ILayout() { }
+            virtual IWindowPtr FocusNext() = 0;
+            virtual IWindowPtr FocusPrev() = 0;
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+            virtual IWindowPtr GetFocus() = 0;
+            virtual int GetFocusIndex() = 0;
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+            virtual bool SetFocus(IWindowPtr window) = 0;
+            virtual void SetFocusIndex(int index) = 0;
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
+            virtual int GetFocusableCount() = 0;
+            virtual IWindowPtr GetFocusableAt(int index) = 0;
 
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+            virtual FocusMode GetFocusMode() const = 0;
+            virtual void SetFocusMode(FocusMode mode) = 0;
+
+            virtual void Layout() = 0;
+    };
+
+    typedef std::shared_ptr<ILayout> ILayoutPtr;
 }

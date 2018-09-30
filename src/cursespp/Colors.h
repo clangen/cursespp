@@ -32,33 +32,59 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/curses_config.h>
+#include <string>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+#define CURSESPP_DEFAULT_COLOR -1LL
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+#define CURSESPP_SELECTED_LIST_ITEM 1
+#define CURSESPP_HIGHLIGHTED_LIST_ITEM 2
+#define CURSESPP_HIGHLIGHTED_ERROR_LIST_ITEM 3
+#define CURSESPP_HIGHLIGHTED_SELECTED_LIST_ITEM 4
+#define CURSESPP_LIST_ITEM_HEADER 5
+#define CURSESPP_LIST_ITEM_HIGHLIGHTED_HEADER 6
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+#define CURSESPP_DEFAULT_CONTENT_COLOR 7
+#define CURSESPP_DEFAULT_FRAME_COLOR 8
+#define CURSESPP_FOCUSED_FRAME_COLOR 9
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+#define CURSESPP_TEXT_DEFAULT 10
+#define CURSESPP_TEXT_DISABLED 11
+#define CURSESPP_TEXT_FOCUSED 12
+#define CURSESPP_TEXT_ACTIVE 13
+#define CURSESPP_TEXT_WARNING 14
+#define CURSESPP_TEXT_ERROR 15
+#define CURSESPP_TEXT_HIDDEN 16
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
+#define CURSESPP_BUTTON_NORMAL 17
+#define CURSESPP_BUTTON_HIGHLIGHTED 18
 
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+#define CURSESPP_SHORTCUT_ROW_NORMAL 19
+#define CURSESPP_SHORTCUT_ROW_FOCUSED 20
+
+#define CURSESPP_OVERLAY_FRAME 21
+#define CURSESPP_OVERLAY_CONTENT 22
+#define CURSESPP_OVERLAY_INPUT_FRAME 23
+#define CURSESPP_OVERLAY_TEXT_FOCUSED 24
+
+#define CURSESPP_BANNER 25
+#define CURSESPP_FOOTER 26
+
+namespace cursespp {
+    class Colors {
+        private:
+            Colors();
+
+        public:
+            enum Mode {
+                RGB,
+                Palette,
+                Basic
+            };
+
+            static void Init(Mode mode = Mode::Basic);
+            static void SetTheme(const std::string& fn);
+    };
 }

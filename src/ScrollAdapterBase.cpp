@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,22 +32,16 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
-#include "ScrollAdapterBase.h"
-#include "ScrollableWindow.h"
-#include "MultiLineEntry.h"
-#include "ListWindow.h"
-#include "utfutil.h"
+#include <cursespp/ScrollAdapterBase.h>
+#include <cursespp/ScrollableWindow.h>
+#include <cursespp/MultiLineEntry.h>
+#include <cursespp/ListWindow.h>
+#include <f8n/utf/conv.h>
 
 using namespace cursespp;
+using namespace f8n::utf;
 
 typedef IScrollAdapter::EntryPtr EntryPtr;
-
-/* used for some calculations. it's ok to let this leak. if it's
-a static instance var we will have non-deterministic behavior when
-the instance is destructed, because the global message queue may
-be torn down as well */
-static ListWindow* DUMMY_SCROLLABLE_WINDOW = new ListWindow();
 
 ScrollAdapterBase::ScrollAdapterBase() {
     this->height = 0;
@@ -67,32 +61,33 @@ size_t ScrollAdapterBase::GetLineCount() {
     return -1;
 }
 
-void ScrollAdapterBase::GetVisibleItems(
+size_t ScrollAdapterBase::GetVisibleItems(
     cursespp::ScrollableWindow* window,
-    size_t desired,
-    std::deque<EntryPtr>&
-    target, size_t& start)
+    size_t desiredTopIndex,
+    std::deque<EntryPtr>& target)
 {
-    size_t actual = desired;
+    size_t actualTopIndex = desiredTopIndex;
 
     /* ensure we have enough data to draw from the specified position
     to the end. if we don't try to back up a bit until we can fill
     the buffer */
     int totalHeight = (int) this->height;
+    int entryCount = (int) this->GetEntryCount();
 
-    /* forward search first... */
-    int end = (int) GetEntryCount();
-    for (int i = (int) desired; i < end && totalHeight > 0; i++) {
+    /* we assume the general case -- we're some where in the middle of the
+    list. we'll start from the specified first item and work our way down */
+    for (int i = (int) desiredTopIndex; i < entryCount && totalHeight > 0; i++) {
         EntryPtr entry = this->GetEntry(window, i);
         entry->SetWidth(this->width);
         totalHeight -= entry->GetLineCount();
         target.push_back(entry);
     }
 
+    /* however, if the list is short, we can actually draw more items above
+    the specified one. let's work our way backwards! */
     if (totalHeight > 0) {
         target.clear();
 
-        /* oops, let's move backwards from the end */
         totalHeight = this->height;
         int i = GetEntryCount() - 1;
         while (i >= 0 && totalHeight >= 0) {
@@ -109,26 +104,17 @@ void ScrollAdapterBase::GetVisibleItems(
             --i;
         }
 
-        actual = i + 1;
+        actualTopIndex = i + 1;
     }
 
-    start = actual;
+    return actualTopIndex;
 }
 
-void ScrollAdapterBase::DrawPage(ScrollableWindow* scrollable, size_t index, ScrollPosition *result) {
-    if (result != NULL) {
-        result->visibleEntryCount = 0;
-        result->firstVisibleEntryIndex = 0;
-        result->lineCount = 0;
-        result->totalEntries = 0;
-        result->logicalIndex = 0;
-    }
-
+void ScrollAdapterBase::DrawPage(ScrollableWindow* scrollable, size_t index, ScrollPosition& result) {
     WINDOW* window = scrollable->GetContent();
-
     werase(window);
 
-    if (this->height == 0 || this->width == 0 || this->GetEntryCount() == 0) {
+    if (!scrollable->IsVisible() || !window || this->height == 0 || this->width == 0 || this->GetEntryCount() == 0) {
         return;
     }
 
@@ -136,13 +122,8 @@ void ScrollAdapterBase::DrawPage(ScrollableWindow* scrollable, size_t index, Scr
         index = GetEntryCount() - 1;
     }
 
-    /* unfortunately this needs to go here so the GetEntry() method knows
-    what the the implied focus is */
-    result->logicalIndex = index;
-
     std::deque<EntryPtr> visible;
-    size_t topIndex; /* calculated by GetVisibleItems */
-    GetVisibleItems(scrollable, index, visible, topIndex);
+    size_t topIndex = GetVisibleItems(scrollable, index, visible);
 
     size_t drawnLines = 0;
 
@@ -151,7 +132,7 @@ void ScrollAdapterBase::DrawPage(ScrollableWindow* scrollable, size_t index, Scr
         size_t count = entry->GetLineCount();
 
         for (size_t i = 0; i < count && drawnLines < this->height; i++) {
-            cursespp_int64 attrs = -1;
+            int64_t attrs = -1;
 
             if (this->decorator) {
                 attrs = this->decorator(scrollable, topIndex + e, i, entry);
@@ -178,7 +159,7 @@ void ScrollAdapterBase::DrawPage(ScrollableWindow* scrollable, size_t index, Scr
 
             /* string is padded above, we don't need a \n */
 
-            wprintw(window, "%s", line.c_str());
+            checked_wprintw(window, "%s", line.c_str());
 
             if (attrs != -1) {
                 wattroff(window, attrs);
@@ -188,11 +169,8 @@ void ScrollAdapterBase::DrawPage(ScrollableWindow* scrollable, size_t index, Scr
         }
     }
 
-    if (result != NULL) {
-        result->visibleEntryCount = visible.size();
-        result->firstVisibleEntryIndex = topIndex;
-        result->lineCount = drawnLines;
-        result->totalEntries = GetEntryCount();
-        result->logicalIndex = index;
-    }
+    result.visibleEntryCount = visible.size();
+    result.firstVisibleEntryIndex = topIndex;
+    result.lineCount = drawnLines;
+    result.totalEntries = GetEntryCount();
 }

@@ -32,33 +32,27 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/IScrollAdapter.h>
+#include <vector>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class MultiLineEntry : public IScrollAdapter::IEntry {
+        public:
+            MultiLineEntry(const std::string& value, int64_t attrs = -1);
+            virtual ~MultiLineEntry() { }
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+            virtual size_t GetLineCount();
+            virtual std::string GetLine(size_t line);
+            virtual void SetWidth(size_t width);
+            virtual int64_t GetAttrs(size_t line);
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
-
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
-
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
-
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+        private:
+            std::string value;
+            std::vector<std::string> lines;
+            size_t charCount;
+            int64_t attrs;
+            size_t width;
+    };
 }

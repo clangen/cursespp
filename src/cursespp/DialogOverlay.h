@@ -32,33 +32,63 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/OverlayBase.h>
+#include <cursespp/TextLabel.h>
+#include <cursespp/ShortcutsWindow.h>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+#include <vector>
+#include <map>
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+namespace cursespp {
+    class DialogOverlay :
+        public OverlayBase
+#if (__clang_major__ == 7 && __clang_minor__ == 3)
+        , public std::enable_shared_from_this<DialogOverlay>
+#endif
+    {
+        public:
+            using ButtonCallback = std::function<void(std::string key)>;
+            using DismissCallback = std::function<void()>;
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+            DialogOverlay();
+            virtual ~DialogOverlay();
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+            DialogOverlay& SetTitle(const std::string& title);
+            DialogOverlay& SetMessage(const std::string& message);
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
+            DialogOverlay& ClearButtons();
 
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+            DialogOverlay& AddButton(
+                const std::string& rawKey,
+                const std::string& key,
+                const std::string& caption,
+                ButtonCallback callback = ButtonCallback());
+
+            DialogOverlay& OnDismiss(DismissCallback dismissCb);
+
+            DialogOverlay& SetAutoDismiss(bool dismiss = true);
+
+            virtual void Layout();
+            virtual bool KeyPress(const std::string& key);
+
+        protected:
+            virtual void OnDismissed();
+
+        private:
+            void Redraw();
+            void RecalculateSize();
+            bool ProcessKey(const std::string& key);
+
+            std::string title;
+            std::string message;
+            std::vector<std::string> messageLines;
+            std::shared_ptr<ShortcutsWindow> shortcuts;
+            int width, height;
+            bool autoDismiss;
+            DismissCallback dismissCb;
+
+            std::map<std::string, ButtonCallback> buttons;
+    };
 }

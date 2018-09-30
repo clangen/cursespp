@@ -32,33 +32,26 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/ILayout.h>
+#include <vector>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class OverlayStack {
+        public:
+            OverlayStack();
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+            ILayoutPtr Top();
+            void Push(ILayoutPtr layout);
+            void Remove(ILayoutPtr layout);
+            void Remove(ILayout* layout);
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+        protected:
+            friend class App;
+            void Clear(); /* don't want this exposed to the public */
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
-
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
-
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+        private:
+            std::vector<ILayoutPtr> stack;
+    };
 }

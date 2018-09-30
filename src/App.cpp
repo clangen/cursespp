@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,19 +32,21 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
-
-#include "App.h"
-#include "Colors.h"
-#include "ILayout.h"
-#include "IInput.h"
-#include "Window.h"
-#include "MessageQueue.h"
-#include "Text.h"
-#include "Screen.h"
-
+#include <cursespp/curses_config.h>
+#include <cursespp/App.h>
+#include <cursespp/Colors.h>
+#include <cursespp/ILayout.h>
+#include <cursespp/IInput.h>
+#include <cursespp/Window.h>
+#include <cursespp/Text.h>
+#include <cursespp/Screen.h>
+#include <f8n/utf/conv.h>
+#include <algorithm>
 #include <thread>
-#include <locale.h>
+
+#ifdef WIN32
+#include <cursespp/Win32Util.h>
+#endif
 
 #ifndef WIN32
 #include <csignal>
@@ -52,10 +54,13 @@
 
 using namespace cursespp;
 using namespace std::chrono;
+using namespace f8n::utf;
 
 static OverlayStack overlays;
 static bool disconnected = false;
-static cursespp_int64 resizeAt = 0;
+static int64_t resizeAt = 0;
+
+static App* instance = nullptr;
 
 #ifndef WIN32
 static void hangupHandler(int signal) {
@@ -68,10 +73,29 @@ static void resizedHandler(int signal) {
 }
 #endif
 
-App::App(const std::string& title) {
-    this->minWidth = this->minHeight = 0;
+App& App::Instance() {
+    if (!instance) {
+        throw std::runtime_error("app not running!");
+    }
+    return *instance;
+}
 
-#ifndef WIN32
+App::App(const std::string& title) {
+    if (instance) {
+        throw std::runtime_error("app instance already running!");
+    }
+
+    instance = this; /* only one instance. */
+
+    this->quit = false;
+    this->minWidth = this->minHeight = 0;
+    this->mouseEnabled = true;
+
+#ifdef WIN32
+    this->iconId = 0;
+    this->appTitle = title;
+    win32::ConfigureDpiAwareness();
+#else
     setlocale(LC_ALL, "");
     std::signal(SIGWINCH, resizedHandler);
     std::signal(SIGHUP, hangupHandler);
@@ -89,13 +113,16 @@ App::App(const std::string& title) {
     keypad(stdscr, TRUE);
     refresh();
     curs_set(0);
+    mousemask(ALL_MOUSE_EVENTS, nullptr);
 
 #ifndef WIN32
-    set_escdelay(50);
+    set_escdelay(20);
 #endif
 
 #ifdef __PDCURSES__
     PDC_set_title(title.c_str());
+    win32::InterceptWndProc();
+    win32::SetAppTitle(title);
 #endif
 }
 
@@ -103,21 +130,72 @@ App::~App() {
     endwin();
 }
 
-void App::SetKeyHandler(MainKeyHandler handler) {
+void App::SetKeyHandler(KeyHandler handler) {
     this->keyHandler = handler;
+}
+
+void App::SetKeyHook(KeyHandler hook) {
+    this->keyHook = hook;
 }
 
 void App::SetResizeHandler(ResizeHandler handler) {
     this->resizeHandler = handler;
 }
 
-void App::SetCustomColorsDisabled(bool disabled) {
-    this->disableCustomColors = disabled;
+void App::SetColorMode(Colors::Mode mode) {
+    this->colorMode = mode;
+}
+
+void App::SetColorTheme(const std::string& colorTheme) {
+    this->colorTheme = colorTheme;
 }
 
 void App::SetMinimumSize(int minWidth, int minHeight) {
     this->minWidth = std::max(0, minWidth);
     this->minHeight = std::max(0, minHeight);
+}
+
+#ifdef WIN32
+void App::SetIcon(int resourceId) {
+    this->iconId = resourceId;
+    if (win32::GetMainWindow()) {
+        win32::SetIcon(resourceId);
+    }
+}
+
+void App::SetSingleInstanceId(const std::string& uniqueId) {
+    this->uniqueId = uniqueId;
+}
+
+bool App::RegisterFont(const std::string& filename) {
+    return win32::RegisterFont(filename) > 0;
+}
+
+void App::SetDefaultFontface(const std::string& fontface) {
+    PDC_set_preferred_fontface(u8to16(fontface).c_str());
+}
+
+void App::SetDefaultMenuVisibility(bool visible) {
+    PDC_set_default_menu_visibility(visible);
+}
+#endif
+
+void App::SetMinimizeToTray(bool minimizeToTray) {
+#ifdef WIN32
+    win32::SetMinimizeToTray(minimizeToTray);
+#endif
+}
+
+void App::Minimize() {
+#ifdef WIN32
+    win32::Minimize();
+#endif
+}
+
+void App::Restore() {
+#ifdef WIN32
+    win32::ShowMainWindow();
+#endif
 }
 
 void App::OnResized() {
@@ -130,6 +208,10 @@ void App::OnResized() {
         Window::Unfreeze();
 
         if (this->state.layout) {
+            if (this->state.viewRoot) {
+                this->state.viewRoot->ResizeToViewport();
+            }
+
             this->state.layout->Layout();
             this->state.layout->BringToTop();
         }
@@ -141,23 +223,74 @@ void App::OnResized() {
     }
 }
 
-void App::Run(ILayoutPtr layout) {
-    Colors::Init(this->disableCustomColors);
+void App::InjectKeyPress(const std::string& key) {
+    this->injectedKeys.push(key);
+}
 
-    cursespp_int64 ch;
-    timeout(IDLE_TIMEOUT_MS);
-    bool quit = false;
+void App::Quit() {
+    this->quit = true;
+}
+
+void App::SetMouseEnabled(bool enabled) {
+    this->mouseEnabled = enabled;
+}
+
+#ifdef WIN32
+bool App::Running(const std::string& uniqueId) {
+    return App::Running(uniqueId, uniqueId);
+}
+
+bool App::Running(const std::string& uniqueId, const std::string& title) {
+    if (uniqueId.size()) {
+        win32::EnableSingleInstance(uniqueId);
+        if (win32::AlreadyRunning()) {
+            win32::ShowOtherInstance(title);
+            return true;
+        }
+    }
+    return false;
+}
+#endif
+
+void App::Run(ILayoutPtr layout) {
+#ifdef WIN32
+    if (App::Running(this->uniqueId, this->appTitle)) {
+        return;
+    }
+#endif
+
+    Colors::Init(this->colorMode);
+
+    if (this->colorTheme.size()) {
+        Colors::SetTheme(this->colorTheme);
+    }
+
+    MEVENT mouseEvent;
+    int64_t ch;
+    std::string kn;
 
     this->state.input = nullptr;
     this->state.keyHandler = nullptr;
 
     this->ChangeLayout(layout);
 
-    while (!quit && !disconnected) {
+    while (!this->quit && !disconnected) {
+        kn = "";
+
+        if (this->injectedKeys.size()) {
+            kn = injectedKeys.front();
+            injectedKeys.pop();
+            ch = ERR;
+            goto process;
+        }
+
+        timeout(IDLE_TIMEOUT_MS);
+
         if (this->state.input) {
             /* if the focused window is an input, allow it to draw a cursor */
             WINDOW *c = this->state.focused->GetContent();
             keypad(c, TRUE);
+            wtimeout(c, IDLE_TIMEOUT_MS);
             ch = wgetch(c);
         }
         else {
@@ -165,12 +298,16 @@ void App::Run(ILayoutPtr layout) {
             ch = wgetch(stdscr);
         }
 
-        if (ch == ERR) {
-            std::this_thread::yield();
-        }
-        else {
-            std::string kn = key::Read((int) ch);
+        if (ch != ERR) {
+            kn = key::Read((int) ch);
 
+            if (this->keyHook) {
+                if (this->keyHook(kn)) {
+                    continue;
+                }
+            }
+
+process:
             if (ch == '\t') { /* tab */
                 this->FocusNextInLayout();
             }
@@ -178,13 +315,32 @@ void App::Run(ILayoutPtr layout) {
                 this->FocusPrevInLayout();
             }
             else if (kn == "^D") { /* ctrl+d quits */
-                quit = true;
-            }
-            else if (kn == "M-r") {
-                Window::Invalidate();
+                this->quit = true;
             }
             else if (kn == "KEY_RESIZE") {
                 resizeAt = App::Now() + REDRAW_DEBOUNCE_MS;
+            }
+            else if (this->mouseEnabled && kn == "KEY_MOUSE") {
+#ifdef WIN32
+                if (nc_getmouse(&mouseEvent) == 0) {
+#else
+                if (getmouse(&mouseEvent) == 0) {
+#endif
+                    auto active = this->state.ActiveLayout();
+                    if (active) {
+                        using Event = IMouseHandler::Event;
+                        auto window = dynamic_cast<IWindow*>(active.get());
+                        Event event(mouseEvent, window);
+                        if (event.MouseWheelDown() || event.MouseWheelUp()) {
+                            if (state.focused) {
+                                state.focused->MouseEvent(event);
+                            }
+                        }
+                        else {
+                            active->MouseEvent(event);
+                        }
+                    }
+                }
             }
             /* order: focused input, global key handler, then layout. */
             else if (!this->state.input ||
@@ -203,7 +359,8 @@ void App::Run(ILayoutPtr layout) {
         actual resize until its settled. */
         if (resizeAt && App::Now() > resizeAt) {
             resize_term(0, 0);
-            Window::Invalidate();
+
+            Window::InvalidateScreen();
 
             if (this->resizeHandler) {
                 this->resizeHandler();
@@ -217,9 +374,14 @@ void App::Run(ILayoutPtr layout) {
         this->CheckShowOverlay();
         this->EnsureFocusIsValid();
 
-        Window::WriteToScreen(this->state.input);
+        /* needs to happen here, or else flicker */
+        Window::MessageQueue().Dispatch();
 
-        MessageQueue::Instance().Dispatch();
+        if (Window::WriteToScreen(this->state.input)) {
+            if (this->state.overlayWindow && !this->state.overlayWindow->IsTop()) {
+                this->state.overlay->BringToTop(); /* active overlay is always on top... */
+            }
+        }
     }
 
     overlays.Clear();
@@ -227,16 +389,28 @@ void App::Run(ILayoutPtr layout) {
 
 void App::UpdateFocusedWindow(IWindowPtr window) {
     if (this->state.focused != window) {
+        if (this->state.focused) {
+            this->state.focused->Blur();
+        }
+
         this->state.focused = window;
         this->state.input = dynamic_cast<IInput*>(window.get());
         this->state.keyHandler = dynamic_cast<IKeyHandler*>(window.get());
+
+        if (this->state.focused) {
+            this->state.focused->Focus();
+        }
     }
 }
 
 void App::EnsureFocusIsValid() {
     ILayoutPtr layout = this->state.ActiveLayout();
-    if (layout && layout->GetFocus() != this->state.focused) {
-        this->UpdateFocusedWindow(this->state.ActiveLayout()->GetFocus());
+    if (layout) {
+        IWindowPtr focused = layout->GetFocus();
+        if (focused != this->state.focused) {
+            this->UpdateFocusedWindow(focused);
+            Window::InvalidateScreen();
+        }
     }
 }
 
@@ -254,6 +428,9 @@ void App::CheckShowOverlay() {
 
         this->state.overlay = top;
 
+        this->state.overlayWindow =
+            top ? dynamic_cast<IWindow*>(top.get()) : nullptr;
+
         ILayoutPtr newTopLayout = this->state.ActiveLayout();
         if (newTopLayout) {
             newTopLayout->Layout();
@@ -269,8 +446,7 @@ void App::ChangeLayout(ILayoutPtr newLayout) {
     }
 
     if (this->state.input && this->state.focused) {
-        /* the current input is about to lose focus. reset the timeout */
-        wtimeout(this->state.focused->GetContent(), 0);
+        wtimeout(this->state.focused->GetContent(), IDLE_TIMEOUT_MS);
     }
 
     if (this->state.layout) {
@@ -280,7 +456,12 @@ void App::ChangeLayout(ILayoutPtr newLayout) {
 
     if (newLayout) {
         this->state.layout = newLayout;
-        this->state.layout->Layout();
+        this->state.viewRoot = dynamic_cast<IViewRoot*>(this->state.layout.get());
+
+        if (this->state.viewRoot) {
+            this->state.viewRoot->ResizeToViewport();
+        }
+
         this->state.layout->Show();
         this->state.layout->BringToTop();
 
@@ -308,7 +489,7 @@ void App::FocusPrevInLayout() {
     this->UpdateFocusedWindow(this->state.ActiveLayout()->FocusPrev());
 }
 
-cursespp_int64 App::Now() {
+int64_t App::Now() {
     return duration_cast<milliseconds>(
         system_clock::now().time_since_epoch()).count();
 }

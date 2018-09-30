@@ -32,84 +32,48 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/Screen.h>
-#include <cursespp/Colors.h>
+#pragma once
+
+#include <cursespp/curses_config.h>
+#include <cursespp/Window.h>
+#include <cursespp/IInput.h>
+#include <cursespp/IKeyHandler.h>
 #include <cursespp/Text.h>
-#include <cursespp/Checkbox.h>
 #include <f8n/utf/conv.h>
+#include <sigslot/sigslot.h>
 
-using namespace cursespp;
-using namespace f8n::utf;
+namespace cursespp {
+    class TextLabel :
+#if (__clang_major__ == 7 && __clang_minor__ == 3)
+        public cursespp::Window,
+        public cursespp::IKeyHandler,
+        public std::enable_shared_from_this<TextLabel> {
+#else
+        public cursespp::Window,
+        public cursespp::IKeyHandler {
+#endif
+    public:
+        sigslot::signal1<TextLabel*> Activated;
 
-#define UNCHECKED std::string("[ ]")
-#define CHECKED std::string("[x]")
+        TextLabel();
+        virtual ~TextLabel();
 
-Checkbox::Checkbox()
-: Window()
-, checked(false) {
-    this->SetFrameVisible(false);
-    this->SetFocusedContentColor(CURSESPP_TEXT_FOCUSED);
-}
+        virtual void SetText(
+            const std::string& value,
+            const text::TextAlign alignment = text::AlignLeft);
 
-Checkbox::~Checkbox() {
-}
+        virtual std::string GetText() { return this->buffer; }
+        virtual size_t Length() { return f8n::utf::u8cols(this->buffer); }
+        virtual void SetBold(bool bold);
+        virtual bool IsBold() { return this->bold; }
+        virtual void OnRedraw();
 
-void Checkbox::SetText(const std::string& value) {
-    if (value != this->buffer) {
-        this->buffer = value;
-        this->Redraw();
-    }
-}
+        virtual bool KeyPress(const std::string& key);
+        virtual bool MouseEvent(const IMouseHandler::Event& event);
 
-void Checkbox::SetChecked(bool checked) {
-    if (checked != this->checked) {
-        this->checked = checked;
-        this->Redraw();
-        this->CheckChanged(this, checked);
-    }
-}
-
-void Checkbox::OnRedraw() {
-    int cx = this->GetContentWidth();
-
-    if (cx > 0) {
-        WINDOW* c = this->GetContent();
-        werase(c);
-
-        int len = (int)u8cols(this->buffer);
-
-        std::string symbol = (this->checked ? CHECKED : UNCHECKED);
-        std::string ellipsized = text::Ellipsize(symbol + " " + this->buffer, cx);
-
-        int64_t attrs = this->IsFocused()
-            ? this->GetFocusedContentColor()
-            : this->GetContentColor();
-
-        if (attrs != -1) {
-            wattron(c, COLOR_PAIR(attrs));
-        }
-
-        checked_wprintw(c, ellipsized.c_str());
-
-        if (attrs != -1) {
-            wattroff(c, COLOR_PAIR(attrs));
-        }
-    }
-}
-
-bool Checkbox::KeyPress(const std::string& key) {
-    if (key == " " || key == "KEY_ENTER") {
-        this->SetChecked(!this->checked);
-        return true;
-    }
-    return false;
-}
-
-bool Checkbox::MouseEvent(const IMouseHandler::Event& event) {
-    if (event.Button1Clicked()) {
-        this->FocusInParent();
-        this->SetChecked(!this->checked);
-        return true;
-    }
-    return false;
+    private:
+        std::string buffer;
+        text::TextAlign alignment;
+        bool bold;
+    };
 }

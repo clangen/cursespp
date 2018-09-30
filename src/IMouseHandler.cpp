@@ -32,84 +32,39 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/Screen.h>
-#include <cursespp/Colors.h>
-#include <cursespp/Text.h>
-#include <cursespp/Checkbox.h>
-#include <f8n/utf/conv.h>
+#include <cursespp/IMouseHandler.h>
+#include <cursespp/IWindow.h>
 
 using namespace cursespp;
-using namespace f8n::utf;
 
-#define UNCHECKED std::string("[ ]")
-#define CHECKED std::string("[x]")
-
-Checkbox::Checkbox()
-: Window()
-, checked(false) {
-    this->SetFrameVisible(false);
-    this->SetFocusedContentColor(CURSESPP_TEXT_FOCUSED);
+IMouseHandler::Event::Event(const Event& original, int childX, int childY) {
+    x = original.x - childX;
+    y = original.y - childY;
+    state = original.state;
 }
 
-Checkbox::~Checkbox() {
-}
-
-void Checkbox::SetText(const std::string& value) {
-    if (value != this->buffer) {
-        this->buffer = value;
-        this->Redraw();
+IMouseHandler::Event::Event(const Event& original, IWindow* parent) {
+    if (parent) {
+        int frameOffset = parent->IsFrameVisible() ? 1 : 0;
+        x = original.x - parent->GetX() - frameOffset;
+        y = original.y - parent->GetY() - frameOffset;
     }
+    else {
+        x = original.x;
+        y = original.y;
+    }
+    state = original.state;
 }
 
-void Checkbox::SetChecked(bool checked) {
-    if (checked != this->checked) {
-        this->checked = checked;
-        this->Redraw();
-        this->CheckChanged(this, checked);
+IMouseHandler::Event::Event(const MEVENT& original, IWindow* parent) {
+    if (parent) {
+        int frameOffset = parent->IsFrameVisible() ? 1 : 0;
+        x = original.x - parent->GetX() - frameOffset;
+        y = original.y - parent->GetY() - frameOffset;
     }
-}
-
-void Checkbox::OnRedraw() {
-    int cx = this->GetContentWidth();
-
-    if (cx > 0) {
-        WINDOW* c = this->GetContent();
-        werase(c);
-
-        int len = (int)u8cols(this->buffer);
-
-        std::string symbol = (this->checked ? CHECKED : UNCHECKED);
-        std::string ellipsized = text::Ellipsize(symbol + " " + this->buffer, cx);
-
-        int64_t attrs = this->IsFocused()
-            ? this->GetFocusedContentColor()
-            : this->GetContentColor();
-
-        if (attrs != -1) {
-            wattron(c, COLOR_PAIR(attrs));
-        }
-
-        checked_wprintw(c, ellipsized.c_str());
-
-        if (attrs != -1) {
-            wattroff(c, COLOR_PAIR(attrs));
-        }
+    else {
+        x = original.x;
+        y = original.y;
     }
-}
-
-bool Checkbox::KeyPress(const std::string& key) {
-    if (key == " " || key == "KEY_ENTER") {
-        this->SetChecked(!this->checked);
-        return true;
-    }
-    return false;
-}
-
-bool Checkbox::MouseEvent(const IMouseHandler::Event& event) {
-    if (event.Button1Clicked()) {
-        this->FocusInParent();
-        this->SetChecked(!this->checked);
-        return true;
-    }
-    return false;
+    state = original.bstate;
 }

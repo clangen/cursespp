@@ -32,84 +32,56 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/Screen.h>
-#include <cursespp/Colors.h>
-#include <cursespp/Text.h>
-#include <cursespp/Checkbox.h>
-#include <f8n/utf/conv.h>
+#include <algorithm>
+#include <cursespp/Scrollbar.h>
 
 using namespace cursespp;
-using namespace f8n::utf;
 
-#define UNCHECKED std::string("[ ]")
-#define CHECKED std::string("[x]")
+void Scrollbar::Draw(ListWindow* list, Window* target) {
+#ifndef __FreeBSD__
+    int height = list->GetHeight();
+    auto *adapter = &list->GetScrollAdapter();
+    if (adapter && height > 2) {
+        auto& pos = list->GetScrollPosition();
 
-Checkbox::Checkbox()
-: Window()
-, checked(false) {
-    this->SetFrameVisible(false);
-    this->SetFocusedContentColor(CURSESPP_TEXT_FOCUSED);
-}
+        /* these are defaults for drawing to an external view, that
+        is, when target != list. */
+        int xOffset = 0;
+        int from = 0, to = height;
+        WINDOW* frame = nullptr;
+        float range = (float) height;
+        size_t minY = 0;
 
-Checkbox::~Checkbox() {
-}
-
-void Checkbox::SetText(const std::string& value) {
-    if (value != this->buffer) {
-        this->buffer = value;
-        this->Redraw();
-    }
-}
-
-void Checkbox::SetChecked(bool checked) {
-    if (checked != this->checked) {
-        this->checked = checked;
-        this->Redraw();
-        this->CheckChanged(this, checked);
-    }
-}
-
-void Checkbox::OnRedraw() {
-    int cx = this->GetContentWidth();
-
-    if (cx > 0) {
-        WINDOW* c = this->GetContent();
-        werase(c);
-
-        int len = (int)u8cols(this->buffer);
-
-        std::string symbol = (this->checked ? CHECKED : UNCHECKED);
-        std::string ellipsized = text::Ellipsize(symbol + " " + this->buffer, cx);
-
-        int64_t attrs = this->IsFocused()
-            ? this->GetFocusedContentColor()
-            : this->GetContentColor();
-
-        if (attrs != -1) {
-            wattron(c, COLOR_PAIR(attrs));
+        if (!target || target == list) {
+            /* if we're drawing on top of the ListWindow's frame,
+            we need to account for the padding it provides. */
+            frame = list->GetFrame();
+            xOffset = list->GetWidth() - 1;
+            ++from; --to;
+            range -= 2.0f;
+            minY = 1;
+        }
+        else {
+            frame = target->GetFrame();
         }
 
-        checked_wprintw(c, ellipsized.c_str());
+        float total = (float) std::max(minY, adapter->GetEntryCount());
 
-        if (attrs != -1) {
-            wattroff(c, COLOR_PAIR(attrs));
+        int yOffset;
+        if (range > total) {
+            yOffset = -1;
+        }
+        else {
+            float percent = (float)pos.logicalIndex / total;
+            yOffset = (int)(range * percent) + minY;
+        }
+
+        for (int i = from; i < to; i++) {
+            wmove(frame, i, xOffset);
+            if (i == yOffset) wattron(frame, A_REVERSE);
+            waddch(frame, (i == yOffset) ? ' ' : ACS_VLINE);
+            if (i == yOffset) wattroff(frame, A_REVERSE);
         }
     }
-}
-
-bool Checkbox::KeyPress(const std::string& key) {
-    if (key == " " || key == "KEY_ENTER") {
-        this->SetChecked(!this->checked);
-        return true;
-    }
-    return false;
-}
-
-bool Checkbox::MouseEvent(const IMouseHandler::Event& event) {
-    if (event.Button1Clicked()) {
-        this->FocusInParent();
-        this->SetChecked(!this->checked);
-        return true;
-    }
-    return false;
+#endif
 }

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,13 +32,13 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
-#include "Text.h"
-#include "MultiLineEntry.h"
+#include <algorithm>
+#include <cursespp/Text.h>
+#include <cursespp/MultiLineEntry.h>
 
 using namespace cursespp;
 
-MultiLineEntry::MultiLineEntry(const std::string& value, cursespp_int64 attrs) {
+MultiLineEntry::MultiLineEntry(const std::string& value, int64_t attrs) {
     this->value = value;
     this->charCount = value.size();
     this->width = -1;
@@ -53,7 +53,7 @@ std::string MultiLineEntry::GetLine(size_t n) {
     return this->lines.at(n);
 }
 
-cursespp_int64 MultiLineEntry::GetAttrs(size_t line) {
+int64_t MultiLineEntry::GetAttrs(size_t line) {
     return this->attrs;
 }
 

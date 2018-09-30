@@ -32,33 +32,17 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/IWindow.h>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
-
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
-
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
-
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
-
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
-
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+namespace cursespp {
+    class IWindowGroup {
+        public:
+            virtual ~IWindowGroup() { }
+            virtual bool AddWindow(IWindowPtr window) = 0;
+            virtual bool RemoveWindow(IWindowPtr window) = 0;
+            virtual size_t GetWindowCount() = 0;
+            virtual IWindowPtr GetWindowAt(size_t position) = 0;
+    };
 }

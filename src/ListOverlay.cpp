@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,39 +32,91 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
-#include "ListOverlay.h"
-#include "Colors.h"
-#include "Screen.h"
-#include "Text.h"
+#include <algorithm>
+#include <functional>
+#include <cursespp/ListOverlay.h>
+#include <cursespp/Scrollbar.h>
+#include <cursespp/Colors.h>
+#include <cursespp/Screen.h>
+#include <cursespp/Text.h>
 
 using namespace cursespp;
 
 #define VERTICAL_PADDING 2
-#define DEFAULT_WIDTH 22
-#define MAX_HEIGHT 12
+#define DEFAULT_WIDTH 26
 
-#define DISMISS() \
-    OverlayStack* overlays = this->GetOverlayStack(); \
-    if (overlays) { \
-        overlays->Remove(this); \
-    }
+/* a little custom type that allows us to draw a scrollbar
+ourself, outside of the list window frame. */
+class ListOverlay::CustomListWindow : public ListWindow {
+    public:
+        using Callback = std::function<void()>;
+
+        CustomListWindow(Callback decorator, Callback adapterChanged)
+        : ListWindow() {
+            this->decorator = decorator;
+            this->adapterChanged = adapterChanged;
+        }
+
+        virtual ~CustomListWindow() {
+        }
+
+        virtual void OnAdapterChanged() {
+            if (adapterChanged) { adapterChanged(); };
+            ListWindow::OnAdapterChanged();
+        }
+
+        void Reset() {
+            decorator = adapterChanged = Callback();
+        }
+
+        size_t EntryCount() {
+            return this->GetScrollAdapter().GetEntryCount();
+        }
+
+    protected:
+        virtual void DecorateFrame() {
+            if (decorator) { decorator(); }
+        }
+
+    private:
+        Callback decorator, adapterChanged;
+};
 
 ListOverlay::ListOverlay() {
     this->SetFrameVisible(true);
     this->SetFrameColor(CURSESPP_OVERLAY_FRAME);
-    this->SetContentColor(CURSESPP_OVERLAY_BACKGROUND);
+    this->SetContentColor(CURSESPP_OVERLAY_CONTENT);
+
+    this->autoDismiss = true;
 
     this->width = this->height = 0;
+    this->setWidth = this->setWidthPercent = 0;
 
-    this->listWindow.reset(new ListWindow());
-    this->listWindow->SetContentColor(CURSESPP_OVERLAY_BACKGROUND);
+    auto decorator = [this] {
+        if (this->ScrollbarVisible()) {
+            Scrollbar::Draw(this->listWindow.get(), this->scrollbar.get());
+        }
+    };
+
+    auto adapterChanged = [this] { this->Layout(); };
+
+    this->scrollbar.reset(new Window());
+    this->scrollbar->SetFrameVisible(false);
+    this->scrollbar->SetContentColor(CURSESPP_OVERLAY_CONTENT);
+
+    this->listWindow.reset(new CustomListWindow(decorator, adapterChanged));
+    this->listWindow->SetContentColor(CURSESPP_OVERLAY_CONTENT);
+    this->listWindow->SetFocusedContentColor(CURSESPP_OVERLAY_CONTENT);
     this->listWindow->SetFrameVisible(false);
+    this->listWindow->EntryActivated.connect(this, &ListOverlay::OnListEntryActivated);
+
     this->listWindow->SetFocusOrder(0);
+    this->AddWindow(this->scrollbar);
     this->AddWindow(this->listWindow);
 }
 
 ListOverlay::~ListOverlay() {
+    this->listWindow->Reset();
 }
 
 void ListOverlay::Layout() {
@@ -77,31 +129,90 @@ void ListOverlay::Layout() {
             this->width,
             this->height);
 
-        int listY = this->y + 3; /* below the border + title */
-        int listHeight = this->height - 4; /* top and bottom padding + title */
+        bool scrollbar = this->ScrollbarVisible();
+        auto contentWidth = this->GetContentWidth() - 2; /* subtract padding */
+        auto contentHeight = this->height - 4; /* top and bottom padding + title */
+        auto startX = 1; /* L padding */
+        auto startY = 2; /* below the title, plus an extra space */
+        auto listWidth = scrollbar ? contentWidth - 2 : contentWidth;
 
-        this->listWindow->MoveAndResize(
-            this->x + 2,
-            listY,
-            this->GetContentWidth() - 2,
-            listHeight);
+        this->listWindow->MoveAndResize(startX, startY, listWidth, contentHeight);
 
-        this->Redraw();
+        auto index = this->listWindow->GetSelectedIndex();
+        if (!this->listWindow->IsEntryVisible(index)) {
+            this->listWindow->ScrollTo(index);
+        }
+
+        if (scrollbar) {
+            this->scrollbar->Show();
+            this->scrollbar->MoveAndResize(contentWidth, startY, 1, contentHeight);
+        }
+        else {
+            this->scrollbar->Hide();
+        }
+
+        this->UpdateContents();
     }
+}
+
+bool ListOverlay::ScrollbarVisible() {
+#ifndef __FreeBSD__
+    auto contentHeight = this->height - 4; /* top and bottom padding + title */
+    return (int) this->listWindow->EntryCount() > contentHeight;
+#else
+    return false;
+#endif
 }
 
 ListOverlay& ListOverlay::SetTitle(const std::string& title) {
     this->title = title;
     this->RecalculateSize();
     this->Layout();
-    this->Repaint();
+    this->Invalidate();
+    return *this;
+}
+
+ListOverlay& ListOverlay::SetWidth(int width) {
+    this->setWidth = width;
+    this->setWidthPercent = 0;
+
+    if (this->IsVisible()) {
+        this->Layout();
+    }
+
+    return *this;
+}
+
+ListOverlay& ListOverlay::SetWidthPercent(int percent) {
+    this->setWidthPercent = percent;
+    this->setWidth = 0;
+
+    if (this->IsVisible()) {
+        this->Layout();
+    }
+
     return *this;
 }
 
 ListOverlay& ListOverlay::SetAdapter(IScrollAdapterPtr adapter) {
     if (this->adapter != adapter) {
         this->adapter = adapter;
-        this->listWindow->SetAdapter(adapter.get());
+        this->listWindow->SetAdapter(adapter);
+    }
+
+    return *this;
+}
+
+ListOverlay& ListOverlay::SetAutoDismiss(bool autoDismiss) {
+    this->autoDismiss = autoDismiss;
+    return *this;
+}
+
+ListOverlay& ListOverlay::SetSelectedIndex(size_t index) {
+    this->listWindow->SetSelectedIndex(index);
+
+    if (!this->listWindow->IsEntryVisible(index)) {
+        this->listWindow->ScrollTo(index);
     }
 
     return *this;
@@ -112,51 +223,105 @@ ListOverlay& ListOverlay::SetItemSelectedCallback(ItemSelectedCallback cb) {
     return *this;
 }
 
+ListOverlay& ListOverlay::SetDeleteKeyCallback(DeleteKeyCallback cb) {
+    this->deleteKeyCallback = cb;
+    return *this;
+}
+
+ListOverlay& ListOverlay::SetDismissedCallback(DismissedCallback cb) {
+    this->dismissedCallback = cb;
+    return *this;
+}
+
+ListOverlay& ListOverlay::SetKeyInterceptorCallback(KeyInterceptorCallback cb) {
+    this->keyInterceptorCallback = cb;
+    return *this;
+}
+
+void ListOverlay::OnListEntryActivated(cursespp::ListWindow* sender, size_t index) {
+    if (itemSelectedCallback) {
+        itemSelectedCallback(this, this->adapter, index);
+    }
+    if (this->autoDismiss) {
+        this->Dismiss();
+    }
+}
+
+size_t ListOverlay::GetSelectedIndex() {
+    return this->listWindow->GetSelectedIndex();
+}
+
 bool ListOverlay::KeyPress(const std::string& key) {
-    if (key == "^[") { /* esc closes */
-        DISMISS();
+    if (keyInterceptorCallback && keyInterceptorCallback(this, key)) {
         return true;
     }
-    else if (key == "KEY_ENTER") {
-        if (itemSelectedCallback) {
-            itemSelectedCallback(
+    else if (key == "^[") { /* esc closes */
+        this->Dismiss();
+        return true;
+    }
+    else if (key == " ") { /* space bar also toggles activation */
+        this->OnListEntryActivated(
+            this->listWindow.get(),
+            this->listWindow->GetSelectedIndex());
+        return true;
+    }
+    else if (key == "KEY_BACKSPACE" || key == "KEY_DC") {
+        if (deleteKeyCallback) {
+            deleteKeyCallback(
+                this,
                 this->adapter,
                 listWindow->GetSelectedIndex());
+
+            return true;
         }
-        DISMISS();
-        return true;
     }
 
     return LayoutBase::KeyPress(key);
 }
 
 void ListOverlay::OnVisibilityChanged(bool visible) {
+    LayoutBase::OnVisibilityChanged(visible);
+
     if (visible) {
-        this->SetFocus(this->listWindow);
-        this->Redraw();
+        this->LayoutBase::SetFocus(this->listWindow);
+        this->UpdateContents();
+    }
+}
+
+void ListOverlay::OnDismissed() {
+    if (this->dismissedCallback) {
+        this->dismissedCallback(this);
     }
 }
 
 void ListOverlay::RecalculateSize() {
-    this->width = DEFAULT_WIDTH;
+    if (this->setWidthPercent > 0) {
+        int cx = Screen::GetWidth();
+        this->width = (int)((this->setWidthPercent / 100.0f) * cx);
+    }
+    else {
+        this->width = this->setWidth > 0 ? this->setWidth : DEFAULT_WIDTH;
+    }
+
     this->height = 4; /* top frame + text + space + bottom frame */
+    const int maxHeight = Screen::GetHeight() - 4;
 
     if (this->adapter) {
         this->height = std::min(
-            (int) MAX_HEIGHT,
+            maxHeight,
             (int) (4 + this->adapter->GetEntryCount()));
     }
 
     /* constrain to app bounds */
     this->height = std::max(0, std::min(Screen::GetHeight() - 4, this->height));
-    this->width = std::max(0, std::min(Screen::GetWidth(), this->width));
+    this->width = std::max(0, std::min(Screen::GetWidth() - 4, this->width));
 
     this->y = VERTICAL_PADDING;
     this->x = (Screen::GetWidth() / 2) - (this->width / 2);
 }
 
-void ListOverlay::Redraw() {
-    if (this->width <= 0 || this->height <= 0) {
+void ListOverlay::UpdateContents() {
+    if (!this->IsVisible() || this->width <= 0 || this->height <= 0) {
         return;
     }
 
@@ -168,8 +333,12 @@ void ListOverlay::Redraw() {
     if (this->title.size()) {
         wmove(c, currentY, currentX);
         wattron(c, A_BOLD);
-        wprintw(c, text::Ellipsize(this->title, this->width - 4).c_str());
+        checked_wprintw(c, text::Align(this->title, text::AlignCenter, this->width - 4).c_str());
         wattroff(c, A_BOLD);
         currentY += 2;
     }
+}
+
+void ListOverlay::RefreshAdapter() {
+    this->listWindow->OnAdapterChanged();
 }

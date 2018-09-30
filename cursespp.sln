@@ -4,6 +4,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.28010.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cursespp", "src\cursespp.vcxproj", "{CC5CB8D1-382E-4FEB-A56B-1D400D70D9FB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B2165720-B4B2-4F4B-8888-8C390C3CB4DB} = {B2165720-B4B2-4F4B-8888-8C390C3CB4DB}
+		{B2165720-B4B2-4F4B-9634-8C390C3CB4DB} = {B2165720-B4B2-4F4B-9634-8C390C3CB4DB}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3rdparty", "f8n\src\3rdparty\3rdparty.vcxproj", "{B2165720-B4B2-4F4B-8888-8C390C3CB4DB}"
 EndProject

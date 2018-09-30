@@ -32,33 +32,41 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/curses_config.h>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class IWindow;
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+    class IMouseHandler {
+        public:
+            struct Event {
+                Event(const Event& original, int childX, int childY);
+                Event(const Event& original, IWindow* parent = nullptr);
+                Event(const MEVENT& original, IWindow* parent = nullptr);
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+                bool Button1Clicked() const { return state & BUTTON1_CLICKED; }
+                bool Button2Clicked() const { return state & BUTTON2_CLICKED; }
+                bool Button3Clicked() const { return state & BUTTON3_CLICKED; }
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+                bool Button1DoubleClicked() const { return state & BUTTON1_DOUBLE_CLICKED; }
+                bool Button2DoubleClicked() const { return state & BUTTON2_DOUBLE_CLICKED; }
+                bool Button3DoubleClicked() const { return state & BUTTON3_DOUBLE_CLICKED; }
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
+#ifdef WIN32
+                bool MouseWheelUp() const { return MOUSE_WHEEL_UP; }
+                bool MouseWheelDown() const { return MOUSE_WHEEL_DOWN; }
+#else
+                bool MouseWheelUp() const { return false; }
+                bool MouseWheelDown() const { return false; }
+#endif
 
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+                int x, y;
+                mmask_t state;
+            };
+
+            virtual ~IMouseHandler() { }
+            virtual bool MouseEvent(const Event& mouseEvent) = 0;
+    };
 }

@@ -32,33 +32,51 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/curses_config.h>
+#include <cursespp/IScrollAdapter.h>
+#include <functional>
+#include <deque>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class ScrollAdapterBase : public IScrollAdapter {
+        public:
+            typedef std::function<int64_t(
+                ScrollableWindow*,
+                size_t,
+                size_t,
+                EntryPtr)> ItemDecorator;
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+            ScrollAdapterBase();
+            virtual ~ScrollAdapterBase();
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+            virtual void SetDisplaySize(size_t width, size_t height);
+            virtual size_t GetLineCount();
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+            virtual void DrawPage(
+                ScrollableWindow* window,
+                size_t index,
+                ScrollPosition& result);
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
+            virtual size_t GetEntryCount() = 0;
+            virtual EntryPtr GetEntry(cursespp::ScrollableWindow* window, size_t index) = 0;
 
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+            virtual void SetItemDecorator(ItemDecorator decorator) { this->decorator = decorator; }
+
+        protected:
+            size_t GetVisibleItems(
+                cursespp::ScrollableWindow* window,
+                size_t desiredTopIndex,
+                std::deque<EntryPtr>& target);
+
+            virtual ItemDecorator GetItemDecorator() { return this->decorator; }
+
+            size_t GetWidth() { return this->width; }
+            size_t GetHeight() { return this->height; }
+
+        private:
+            size_t width, height;
+            ItemDecorator decorator;
+    };
 }

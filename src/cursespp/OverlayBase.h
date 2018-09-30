@@ -32,33 +32,58 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/IOverlay.h>
+#include <cursespp/LayoutBase.h>
+#include <cursespp/OverlayStack.h>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class OverlayBase : public LayoutBase, public IOverlay {
+        public:
+            OverlayBase() : LayoutBase() {
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+            }
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+            virtual ~OverlayBase() {
+                this->stack = nullptr;
+            }
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+            virtual void SetOverlayStack(OverlayStack* stack) {
+                this->stack = stack;
+            }
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
+            virtual bool IsTop() {
+                if (LayoutBase::IsTop()) {
+                    return true;
+                }
 
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+                for (size_t i = 0; i < this->GetWindowCount(); i++) {
+                    if (this->GetWindowAt(i)->IsTop()) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+        protected:
+            OverlayStack* GetOverlayStack() {
+                return this->stack;
+            }
+
+            void Dismiss() {
+                if (this->stack) {
+                    stack->Remove(this);
+                    this->OnDismissed();
+                }
+            }
+
+            virtual void OnDismissed() {
+                /* for subclass use */
+            }
+
+        private:
+            OverlayStack* stack;
+    };
 }

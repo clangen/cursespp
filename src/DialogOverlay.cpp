@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,11 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
-#include "DialogOverlay.h"
-#include "Colors.h"
-#include "Screen.h"
-#include "Text.h"
+#include <cursespp/DialogOverlay.h>
+#include <cursespp/Colors.h>
+#include <cursespp/Screen.h>
+#include <cursespp/Text.h>
 
 using namespace cursespp;
 
@@ -46,14 +45,19 @@ using namespace cursespp;
 DialogOverlay::DialogOverlay() {
     this->SetFrameVisible(true);
     this->SetFrameColor(CURSESPP_OVERLAY_FRAME);
-    this->SetContentColor(CURSESPP_OVERLAY_BACKGROUND);
+    this->SetContentColor(CURSESPP_OVERLAY_CONTENT);
 
     this->width = this->height = 0;
     this->autoDismiss = true;
 
     this->shortcuts.reset(new ShortcutsWindow());
     this->shortcuts->SetAlignment(text::AlignRight);
-    this->AddWindow(this->shortcuts);
+
+    this->shortcuts->SetChangedCallback([this](std::string key) {
+        this->ProcessKey(key);
+    });
+
+    this->LayoutBase::AddWindow(this->shortcuts);
 }
 
 DialogOverlay::~DialogOverlay() {
@@ -70,8 +74,8 @@ void DialogOverlay::Layout() {
             this->height + 2);
 
         this->shortcuts->MoveAndResize(
-            HORIZONTAL_PADDING + 1,
-            VERTICAL_PADDING + this->height,
+            0,
+            this->height - 1,
             this->GetContentWidth(),
             1);
 
@@ -83,7 +87,8 @@ DialogOverlay& DialogOverlay::SetTitle(const std::string& title) {
     this->title = title;
     this->RecalculateSize();
     this->Layout();
-    this->Repaint();
+    this->Clear();
+    this->Invalidate();
     return *this;
 }
 
@@ -92,12 +97,19 @@ DialogOverlay& DialogOverlay::SetMessage(const std::string& message) {
     this->width = 0; /* implicitly triggers a new BreakLines() */
     this->RecalculateSize();
     this->Layout();
-    this->Repaint();
+    this->Clear();
+    this->Invalidate();
     return *this;
 }
 
 DialogOverlay& DialogOverlay::SetAutoDismiss(bool dismiss) {
     this->autoDismiss = dismiss;
+    return *this;
+}
+
+DialogOverlay& DialogOverlay::ClearButtons() {
+    this->shortcuts->RemoveAll();
+    this->buttons.clear();
     return *this;
 }
 
@@ -108,13 +120,19 @@ DialogOverlay& DialogOverlay::AddButton(
     ButtonCallback callback)
 {
     this->shortcuts->AddShortcut(key, caption);
-    this->buttons[rawKey] = callback;
+    this->buttons[rawKey] = callback; /* for KeyPress() */
+    this->buttons[key] = callback; /* for ShortcutsWindow::ChangedCallback */
     this->Layout();
-    this->Repaint();
+    this->Invalidate();
     return *this;
 }
 
-bool DialogOverlay::KeyPress(const std::string& key) {
+DialogOverlay& DialogOverlay::OnDismiss(DismissCallback dismissCb) {
+    this->dismissCb = dismissCb;
+    return *this;
+}
+
+bool DialogOverlay::ProcessKey(const std::string& key) {
     auto it = this->buttons.find(key);
 
     if (it != this->buttons.end()) {
@@ -125,21 +143,25 @@ bool DialogOverlay::KeyPress(const std::string& key) {
         }
 
         if (this->autoDismiss) {
-            OverlayStack* overlays = this->GetOverlayStack();
-            if (overlays) {
-                overlays->Remove(this);
-            }
+            this->Dismiss();
         }
 
         return true;
     }
 
+    return false;
+}
+
+bool DialogOverlay::KeyPress(const std::string& key) {
+    if (this->ProcessKey(key)) {
+        return true;
+    }
     return LayoutBase::KeyPress(key);
 }
 
-void DialogOverlay::OnVisibilityChanged(bool visible) {
-    if (visible) {
-        this->Redraw();
+void DialogOverlay::OnDismissed() {
+    if (this->dismissCb) {
+        this->dismissCb();
     }
 }
 
@@ -178,7 +200,7 @@ void DialogOverlay::RecalculateSize() {
 }
 
 void DialogOverlay::Redraw() {
-    if (this->width <= 0 || this->height <= 0) {
+    if (!this->IsVisible() || this->width <= 0 || this->height <= 0) {
         return;
     }
 
@@ -190,7 +212,7 @@ void DialogOverlay::Redraw() {
     if (this->title.size()) {
         wmove(c, currentY, currentX);
         wattron(c, A_BOLD);
-        wprintw(c, text::Ellipsize(this->title, this->width - 4).c_str());
+        checked_wprintw(c, text::Ellipsize(this->title, this->width - 4).c_str());
         wattroff(c, A_BOLD);
         currentY += 2;
     }
@@ -198,7 +220,7 @@ void DialogOverlay::Redraw() {
     if (this->message.size()) {
         for (size_t i = 0; i < messageLines.size(); i++) {
             wmove(c, currentY, currentX);
-            wprintw(c, this->messageLines.at(i).c_str());
+            checked_wprintw(c, this->messageLines.at(i).c_str());
             ++currentY;
         }
     }

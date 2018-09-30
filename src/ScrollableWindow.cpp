@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,12 +32,11 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
 #include <algorithm>
 
-#include "ScrollableWindow.h"
-#include "Screen.h"
-#include "Colors.h"
+#include <cursespp/ScrollableWindow.h>
+#include <cursespp/Screen.h>
+#include <cursespp/Colors.h>
 
 using namespace cursespp;
 
@@ -45,21 +44,51 @@ static const size_t INVALID_INDEX = (size_t) -1;
 
 typedef IScrollAdapter::ScrollPosition ScrollPos;
 
+class EmptyAdapter : public IScrollAdapter {
+public:
+    virtual void SetDisplaySize(size_t width, size_t height) { }
+    virtual size_t GetEntryCount() { return 0; }
+    virtual EntryPtr GetEntry(cursespp::ScrollableWindow* window, size_t index) { return IScrollAdapter::EntryPtr(); }
+    virtual void DrawPage(ScrollableWindow* window, size_t index, ScrollPosition& result) { }
+};
+
+static EmptyAdapter emptyAdapter;
+
 #define REDRAW_VISIBLE_PAGE() \
     { \
         ScrollPos& pos = GetMutableScrollPosition(); \
         GetScrollAdapter().DrawPage( \
             this, \
             pos.firstVisibleEntryIndex, \
-            &pos); \
+            pos); \
     } \
 
-ScrollableWindow::ScrollableWindow(IWindow *parent)
+ScrollableWindow::ScrollableWindow(std::shared_ptr<IScrollAdapter> adapter, IWindow *parent)
 : Window(parent)
+, adapter(adapter)
 , allowArrowKeyPropagation(false) {
 }
 
+ScrollableWindow::ScrollableWindow(IWindow *parent)
+: ScrollableWindow(std::shared_ptr<IScrollAdapter>(), parent) {
+}
+
 ScrollableWindow::~ScrollableWindow() {
+}
+
+void ScrollableWindow::SetAdapter(std::shared_ptr<IScrollAdapter> adapter) {
+    if (adapter != this->adapter) {
+        this->adapter = adapter;
+        this->ScrollToTop();
+    }
+}
+
+IScrollAdapter& ScrollableWindow::GetScrollAdapter() {
+    if (this->adapter) {
+        return *this->adapter;
+    }
+
+    return emptyAdapter;
 }
 
 void ScrollableWindow::OnDimensionsChanged() {
@@ -89,24 +118,49 @@ bool ScrollableWindow::KeyPress(const std::string& key) {
     the logical (selected) index doesn't actually change -- i.e. the
     user is at the beginning or end of the scrollable area. this is so
     controllers can change focus in response to UP/DOWN if necessary. */
+    auto& keys = NavigationKeys();
 
-    if (key == "KEY_NPAGE") { this->PageDown(); return true; }
-    else if (key == "KEY_PPAGE") { this->PageUp(); return true; }
-    else if (key == "KEY_DOWN") {
+    if (keys.PageDown(key)) { this->PageDown(); return true; }
+    else if (keys.PageUp(key)) { this->PageUp(); return true; }
+    else if (keys.Down(key)) {
         const size_t before = this->GetScrollPosition().logicalIndex;
         this->ScrollDown();
         const size_t after = this->GetScrollPosition().logicalIndex;
         return !this->allowArrowKeyPropagation || (before != after);
     }
-    else if (key == "KEY_UP") {
+    else if (keys.Up(key)) {
         const size_t before = this->GetScrollPosition().logicalIndex;
         this->ScrollUp();
         const size_t after = this->GetScrollPosition().logicalIndex;
         return !this->allowArrowKeyPropagation || (before != after);
     }
-    else if (key == "KEY_HOME") { this->ScrollToTop(); return true; }
-    else if (key == "KEY_END") { this->ScrollToBottom(); return true; }
+    else if (keys.Home(key)) { this->ScrollToTop(); return true; }
+    else if (keys.End(key)) { this->ScrollToBottom(); return true; }
     return false;
+}
+
+bool ScrollableWindow::MouseEvent(const IMouseHandler::Event& event) {
+    if (event.Button1Clicked()) {
+        this->FocusInParent();
+        return true;
+    }
+    else if (event.MouseWheelDown()) {
+        this->PageDown();
+        return true;
+    }
+    else if (event.MouseWheelUp()) {
+        this->PageUp();
+        return true;
+    }
+    return false;
+}
+
+
+void ScrollableWindow::OnRedraw() {
+    IScrollAdapter *adapter = &GetScrollAdapter();
+    ScrollPos &pos = this->GetMutableScrollPosition();
+    adapter->DrawPage(this, pos.firstVisibleEntryIndex, pos);
+    this->Invalidate();
 }
 
 void ScrollableWindow::OnAdapterChanged() {
@@ -119,8 +173,8 @@ void ScrollableWindow::OnAdapterChanged() {
     }
     else {
         ScrollPos &pos = this->GetMutableScrollPosition();
-        adapter->DrawPage(this, pos.firstVisibleEntryIndex, &pos);
-        this->Repaint();
+        adapter->DrawPage(this, pos.firstVisibleEntryIndex, pos);
+        this->Invalidate();
     }
 }
 
@@ -130,17 +184,17 @@ void ScrollableWindow::Show() {
 }
 
 void ScrollableWindow::ScrollToTop() {
-    GetScrollAdapter().DrawPage(this, 0, &this->GetMutableScrollPosition());
-    this->Repaint();
+    GetScrollAdapter().DrawPage(this, 0, this->GetMutableScrollPosition());
+    this->Invalidate();
 }
 
 void ScrollableWindow::ScrollToBottom() {
     GetScrollAdapter().DrawPage(
         this,
         GetScrollAdapter().GetEntryCount(),
-        &this->GetMutableScrollPosition());
+        this->GetMutableScrollPosition());
 
-    this->Repaint();
+    this->Invalidate();
 }
 
 void ScrollableWindow::ScrollUp(int delta) {
@@ -148,9 +202,9 @@ void ScrollableWindow::ScrollUp(int delta) {
 
     if (pos.firstVisibleEntryIndex > 0) {
         GetScrollAdapter().DrawPage(
-            this, pos.firstVisibleEntryIndex - delta, &pos);
+            this, pos.firstVisibleEntryIndex - delta, pos);
 
-        this->Repaint();
+        this->Invalidate();
     }
 }
 
@@ -158,9 +212,9 @@ void ScrollableWindow::ScrollDown(int delta) {
     ScrollPos &pos = this->GetMutableScrollPosition();
 
     GetScrollAdapter().DrawPage(
-        this, pos.firstVisibleEntryIndex + delta, &pos);
+        this, pos.firstVisibleEntryIndex + delta, pos);
 
-    this->Repaint();
+    this->Invalidate();
 }
 
 size_t ScrollableWindow::GetPreviousPageEntryIndex() {

@@ -32,33 +32,37 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <string>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class INavigationKeys {
+        public:
+            virtual ~INavigationKeys() { }
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+            virtual bool Up(const std::string& key) = 0;
+            virtual bool Down(const std::string& key) = 0;
+            virtual bool Left(const std::string& key) = 0;
+            virtual bool Right(const std::string& key) = 0;
+            virtual bool Next(const std::string& key) = 0;
+            virtual bool PageUp(const std::string& key) = 0;
+            virtual bool PageDown(const std::string& key) = 0;
+            virtual bool Home(const std::string& key) = 0;
+            virtual bool End(const std::string& key) = 0;
+            virtual bool Prev(const std::string& key) = 0;
+            virtual bool Mode(const std::string& key) = 0;
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
-
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
-
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
-
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+            virtual std::string Up() = 0;
+            virtual std::string Down() = 0;
+            virtual std::string Left() = 0;
+            virtual std::string Right() = 0;
+            virtual std::string Next() = 0;
+            virtual std::string PageUp() = 0;
+            virtual std::string PageDown() = 0;
+            virtual std::string Home() = 0;
+            virtual std::string End() = 0;
+            virtual std::string Prev() = 0;
+            virtual std::string Mode() = 0;
+    };
 }

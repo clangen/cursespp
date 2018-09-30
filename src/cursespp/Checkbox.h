@@ -32,33 +32,39 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/curses_config.h>
+#include <cursespp/Window.h>
+#include <cursespp/IKeyHandler.h>
+#include <sigslot/sigslot.h>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class Checkbox :
+        public cursespp::IKeyHandler,
+#if (__clang_major__ == 7 && __clang_minor__ == 3)
+        public cursespp::Window,
+        public std::enable_shared_from_this<Checkbox> {
+#else
+        public cursespp::Window {
+#endif
+    public:
+        sigslot::signal2<Checkbox*, bool> CheckChanged;
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+        Checkbox();
+        virtual ~Checkbox();
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+        virtual void SetText(const std::string& value);
+        virtual void SetChecked(bool checked);
+        virtual std::string GetText() { return this->buffer; }
+        virtual bool IsChecked() { return this->checked; }
+        virtual bool KeyPress(const std::string& key);
+        virtual bool MouseEvent(const IMouseHandler::Event& event);
+        virtual void OnRedraw();
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+    private:
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
-
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+        std::string buffer;
+        bool checked;
+    };
 }

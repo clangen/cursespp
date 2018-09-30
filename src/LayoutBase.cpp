@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,10 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
 #include <climits>
-#include "LayoutBase.h"
-#include "Colors.h"
+#include <algorithm>
+#include <cursespp/LayoutBase.h>
+#include <cursespp/Colors.h>
 
 using namespace cursespp;
 
@@ -67,12 +67,10 @@ bool sortByFocusOrder(IWindowPtr a, IWindowPtr b) {
 
 static inline IWindowPtr adjustFocus(IWindowPtr oldFocus, IWindowPtr newFocus) {
     if (oldFocus) {
-        oldFocus->SetFrameColor(CURSESPP_DEFAULT_FRAME_COLOR);
         oldFocus->Blur();
     }
 
     if (newFocus) {
-        newFocus->SetFrameColor(CURSESPP_FOCUSED_FRAME_COLOR);
         newFocus->Focus();
     }
 
@@ -87,58 +85,93 @@ LayoutBase::LayoutBase(IWindow* parent)
 }
 
 LayoutBase::~LayoutBase() {
+    for (IWindowPtr window : this->children) {
+        window->SetParent(nullptr);
+    }
+}
 
+void LayoutBase::OnVisibilityChanged(bool visible) {
+    if (visible) {
+        for (IWindowPtr window : this->children) {
+            window->OnParentVisibilityChanged(true);
+        }
+
+        this->IndexFocusables();
+        this->SortFocusables();
+    }
+    else {
+        for (IWindowPtr window : this->children) {
+            window->OnParentVisibilityChanged(false);
+        }
+    }
 }
 
 void LayoutBase::Show() {
     Window::Show();
-
-    for (size_t i = 0; i < this->children.size(); i++) {
-        this->children.at(i)->Show();
-    }
-
-    this->IndexFocusables();
-    this->SortFocusables();
+    this->Layout();
 }
 
 void LayoutBase::Hide() {
-    for (size_t i = 0; i < this->children.size(); i++) {
-        this->children.at(i)->Hide();
-    }
-
     Window::Hide();
+}
+
+void LayoutBase::Layout() {
+    if (this->IsVisible() && !this->CheckForBoundsError()) {
+        this->OnLayout();
+    }
+}
+
+void LayoutBase::OnLayout() {
+    /* most layouts will want to perform layout logic here... */
+}
+
+void LayoutBase::OnParentVisibilityChanged(bool visible) {
+    Window::OnParentVisibilityChanged(visible);
+
+    for (IWindowPtr window : this->children) {
+        window->OnParentVisibilityChanged(visible);
+    }
+}
+
+void LayoutBase::OnChildVisibilityChanged(bool visible, IWindow* child) {
+    Window::OnChildVisibilityChanged(visible, child);
+    this->IndexFocusables();
 }
 
 void LayoutBase::BringToTop() {
     Window::BringToTop();
 
-    for (size_t i = 0; i < this->children.size(); i++) {
-        this->children.at(i)->BringToTop();
+    for (IWindowPtr window : this->children) {
+        window->BringToTop();
     }
 
-    this->Repaint();
+    this->Invalidate();
 }
 
 void LayoutBase::SendToBottom() {
-    for (size_t i = 0; i < this->children.size(); i++) {
-        this->children.at(i)->SendToBottom();
+    for (IWindowPtr window : this->children) {
+        window->SendToBottom();
     }
 
     Window::SendToBottom();
 }
 
-void LayoutBase::Repaint() {
+void LayoutBase::Invalidate() {
     /* repaint bottom up. start with ourselves, then our children,
     recursively. */
 
-    Window::Repaint();
+    Window::Invalidate();
 
-    for (size_t i = 0; i < this->children.size(); i++) {
-        this->children.at(i)->Repaint();
+    for (IWindowPtr window : this->children) {
+        window->Invalidate();
     }
 }
 
 bool LayoutBase::AddWindow(IWindowPtr window) {
+    if (!window) {
+        throw std::runtime_error("window cannot be null!");
+    }
+
     if (find(this->children, window) >= 0) {
         return true;
     }
@@ -147,6 +180,7 @@ bool LayoutBase::AddWindow(IWindowPtr window) {
 
     this->children.push_back(window);
     AddFocusable(window);
+    window->Show();
 
     return true;
 }
@@ -157,6 +191,7 @@ bool LayoutBase::RemoveWindow(IWindowPtr window) {
     std::vector<IWindowPtr>::iterator it = this->children.begin();
     for ( ; it != this->children.end(); it++) {
         if (*it == window) {
+            (*it)->Hide();
             this->children.erase(it);
             return true;
         }
@@ -180,8 +215,10 @@ void LayoutBase::IndexFocusables() {
     }
 
     this->focusable.clear();
-    for (size_t i = 0; i < this->children.size(); i++) {
-        AddFocusable(this->children.at(i));
+    for (IWindowPtr window : this->children) {
+        if (window->IsVisible()) {
+            AddFocusable(window);
+        }
     }
 
     if (focusedWindow) {
@@ -317,8 +354,11 @@ IWindowPtr LayoutBase::FocusLast() {
 }
 
 IWindowPtr LayoutBase::GetFocus() {
-    if (this->focused >= 0 && this->focusable.size() > 0) {
-        return this->focusable[this->focused];
+    if (this->focused >= 0 && (int) this->focusable.size() > this->focused) {
+        auto view = this->focusable[this->focused];
+        if (view->IsVisible()) {
+            return view;
+        }
     }
 
     return IWindowPtr();
@@ -353,14 +393,33 @@ void LayoutBase::SetFocusMode(FocusMode mode) {
 }
 
 bool LayoutBase::KeyPress(const std::string& key) {
-    if (key == "KEY_LEFT" || key == "KEY_UP") {
+    auto& keys = NavigationKeys();
+    if (keys.Left(key) || keys.Up(key)) {
         this->FocusPrev();
         return true;
     }
-    else if (key == "KEY_RIGHT" || key == "KEY_DOWN") {
+    else if (keys.Right(key) || keys.Down(key)) {
         this->FocusNext();
         return true;
     }
 
+    return false;
+}
+
+bool LayoutBase::MouseEvent(const IMouseHandler::Event& mouseEvent) {
+    for (auto window : this->children) {
+        auto x = window->GetX();
+        auto y = window->GetY();
+        auto cx = window->GetWidth();
+        auto cy = window->GetHeight();
+        if (mouseEvent.x >= x && mouseEvent.x < x + cx &&
+            mouseEvent.y >= y && mouseEvent.y < y + cy)
+        {
+            auto relative = IMouseHandler::Event(mouseEvent, window.get());
+            if (window->MouseEvent(relative)) {
+                return true;
+            }
+        }
+    }
     return false;
 }

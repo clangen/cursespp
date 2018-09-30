@@ -32,33 +32,27 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <string>
+#include <vector>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    namespace text {
+        enum TextAlign {
+            AlignLeft,
+            AlignCenter,
+            AlignRight
+        };
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+        std::string Ellipsize(const std::string& str, size_t len);
+        std::string Align(const std::string& str, TextAlign align, size_t len);
+        std::vector<std::string> BreakLines(const std::string& line, size_t width);
+        std::vector<std::string> Split(const std::string& str, const std::string& delimiters = " ", bool trimEmpty = false);
+    }
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
-
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
-
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
-
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+    namespace key {
+        std::string Normalize(const std::string& keyname);
+        std::string Read(int64_t ch);
+    }
 }

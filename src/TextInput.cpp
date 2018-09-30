@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,23 +32,15 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include <limits.h>
 
-#include "TextInput.h"
-#include "Screen.h"
-#include "Colors.h"
-#include "MessageQueue.h"
-#include "Message.h"
-#include "utfutil.h"
+#include <cursespp/Screen.h>
+#include <cursespp/Colors.h>
+#include <cursespp/TextInput.h>
+#include <f8n/utf/conv.h>
 
 using namespace cursespp;
-
-inline static void redrawContents(IWindow &window, const std::string& text) {
-    WINDOW* c = window.GetContent();
-    werase(c);
-    wprintw(c, text.c_str());
-    window.Repaint();
-}
+using namespace f8n::utf;
 
 inline static bool removeUtf8Char(std::string& value, size_t position) {
     /* optimize the normal case, at the end... */
@@ -73,19 +65,66 @@ inline static bool removeUtf8Char(std::string& value, size_t position) {
     return false;
 }
 
-TextInput::TextInput(IInput::InputMode inputMode)
+TextInput::TextInput(TextInput::Style style, IInput::InputMode inputMode)
 : Window()
 , bufferLength(0)
 , position(0)
-, inputMode(inputMode) {
+, style(style)
+, inputMode(inputMode)
+, enterEnabled(true)
+, truncate(false) {
+    if (style == StyleLine) {
+        this->SetFrameVisible(false);
+    }
+}
+
+TextInput::TextInput(IInput::InputMode inputMode)
+: TextInput(TextInput::StyleBox, inputMode) {
 }
 
 TextInput::~TextInput() {
 }
 
-void TextInput::Show() {
-    Window::Show();
-    redrawContents(*this, buffer);
+void TextInput::OnRedraw() {
+    WINDOW* c = this->GetContent();
+    werase(c);
+
+    std::string trimmed;
+    int contentWidth = GetContentWidth();
+    int columns = u8cols(buffer);
+
+    /* if the string is larger than our width, we gotta trim it for
+    display purposes... */
+    if (position > contentWidth) {
+        trimmed = u8substr(this->buffer, position - contentWidth, INT_MAX);
+    }
+    else {
+        trimmed = buffer;
+    }
+
+    if (!this->IsFocused() && !columns && hintText.size()) {
+        /* draw the hint if we have one and there's no string yet */
+        checked_waddstr(c, u8substr(hintText, 0, columns).c_str());
+    }
+    else {
+        /* mask the string if we're in password mode */
+        if (inputMode == InputPassword) {
+            trimmed = std::string(columns, '*');
+        }
+
+        /* if we're in "Line" mode and the string is short, pad the
+        end with a bunch of underscores */
+        if (style == StyleLine) {
+            int remaining = contentWidth - columns;
+            if (remaining > 0) {
+                trimmed += std::string(remaining, '_');
+            }
+        }
+
+        /* finally, draw the offset/trimmed, potentially masked, padded
+        string to the output */
+        checked_waddstr(c, trimmed.c_str());
+    }
 }
 
 size_t TextInput::Length() {
@@ -105,11 +144,22 @@ bool TextInput::Write(const std::string& key) {
     int len = u8len(key);
     if (len == 1 || (len > 1 && this->inputMode == InputRaw)) {
         if (this->inputMode == InputRaw) {
+            auto& bl = this->rawBlacklist;
+            if (std::find(bl.begin(), bl.end(), key) != bl.end()) {
+                return false;
+            }
             this->buffer = key;
             this->bufferLength = len;
             this->position = len;
         }
         else {
+            if (truncate) {
+                int cols = u8cols(this->buffer);
+                if (cols >= this->GetWidth()) {
+                    return false;
+                }
+            }
+
             size_t offset = u8offset(this->buffer, this->position);
             offset = (offset == std::string::npos) ? 0 : offset;
             this->buffer.insert(offset, key);
@@ -118,14 +168,32 @@ bool TextInput::Write(const std::string& key) {
         }
 
         this->TextChanged(this, this->buffer);
-        redrawContents(*this, buffer);
+        this->Redraw();
         return true;
     }
 
     return false;
 }
 
+void TextInput::SetTruncate(bool truncate) {
+    if (this->truncate != truncate) {
+        this->truncate = truncate;
+    }
+}
+
+void TextInput::SetEnterEnabled(bool enabled) {
+    this->enterEnabled = enabled;
+}
+
+void TextInput::SetRawKeyBlacklist(const std::vector<std::string>&& blacklist) {
+    this->rawBlacklist = blacklist;
+}
+
 bool TextInput::KeyPress(const std::string& key) {
+    if (this->inputMode == InputMode::InputRaw) {
+        return false;
+    }
+
     if (key == "M-KEY_BACKSPACE") {
         this->SetText("");
         return true;
@@ -134,7 +202,7 @@ bool TextInput::KeyPress(const std::string& key) {
         if (this->position > 0) {
             if (removeUtf8Char(this->buffer, this->position)) {
                 --this->bufferLength;
-                redrawContents(*this, buffer);
+                this->Redraw();
                 this->position = std::max(0, this->position - 1);
                 this->TextChanged(this, this->buffer);
             }
@@ -142,8 +210,13 @@ bool TextInput::KeyPress(const std::string& key) {
         return true;
     }
     else if (key == "KEY_ENTER") {
-        this->EnterPressed(this);
-        return true;
+        if (enterEnabled) {
+            this->EnterPressed(this);
+            return true;
+        }
+        else {
+            return false;
+        }
     }
     else if (key == "KEY_LEFT") {
         return this->OffsetPosition(-1);
@@ -153,19 +226,20 @@ bool TextInput::KeyPress(const std::string& key) {
     }
     else if (key == "KEY_HOME") {
         this->position = 0;
-        redrawContents(*this, buffer);
+        this->Redraw();
         return true;
     }
     else if (key == "KEY_END") {
         this->position = this->bufferLength;
-        redrawContents(*this, buffer);
+        this->Redraw();
         return true;
     }
     else if (key == "KEY_DC") {
         if ((int) this->bufferLength > this->position) {
             removeUtf8Char(this->buffer, this->position + 1);
             this->bufferLength = u8len(buffer);
-            redrawContents(*this, buffer);
+            this->Redraw();
+            this->TextChanged(this, this->buffer);
             return true;
         }
     }
@@ -179,7 +253,7 @@ bool TextInput::OffsetPosition(int delta) {
 
     if (this->position != actual) {
         this->position = actual;
-        redrawContents(*this, buffer);
+        this->Redraw();
         return true; /* moved */
     }
 
@@ -190,8 +264,22 @@ void TextInput::SetText(const std::string& value) {
     if (value != this->buffer) {
         this->buffer = value;
         this->bufferLength = u8len(buffer);
-        this->position = 0;
+        this->position = this->bufferLength;
         this->TextChanged(this, this->buffer);
-        redrawContents(*this, buffer);
+        this->Redraw();
     }
+}
+
+void TextInput::SetHint(const std::string& hint) {
+    this->hintText = hint;
+    this->Redraw();
+}
+
+bool TextInput::MouseEvent(const IMouseHandler::Event& event) {
+    if (event.Button1Clicked()) {
+        this->position = std::max(0, std::min((int)this->bufferLength, event.x));
+        this->FocusInParent();
+        return true;
+    }
+    return false;
 }

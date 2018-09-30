@@ -32,33 +32,30 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#ifdef WIN32
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
+#include <Windows.h>
+#include <string>
+
+namespace cursespp {
+    namespace win32 {
+        void InterceptWndProc();
+        void ShowMainWindow();
+        void HideMainWindow();
+        void Minimize();
+        HWND GetMainWindow();
+        void SetIcon(int resourceId);
+        void SetAppTitle(const std::string& title);
+        void SetMinimizeToTray(bool enabled);
+        void EnableSingleInstance(const std::string& uniqueId);
+        bool AlreadyRunning();
+        void ShowOtherInstance(const std::string& title);
+        void ConfigureDpiAwareness();
+        int RegisterFont(const std::string& filename);
+        int UnregisterFont(const std::string& filename);
+    }
 }
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
-
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
-
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
-
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
-
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
-}
+#endif

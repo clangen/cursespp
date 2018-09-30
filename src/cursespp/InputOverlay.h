@@ -32,33 +32,55 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/OverlayBase.h>
+#include <cursespp/TextInput.h>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class InputOverlay :
+        public OverlayBase,
+        public sigslot::has_slots<>
+#if (__clang_major__ == 7 && __clang_minor__ == 3)
+        , public std::enable_shared_from_this<InputOverlay>
+#endif
+    {
+        public:
+            struct IValidator {
+                virtual bool IsValid(const std::string& input) const = 0;
+                virtual const std::string ErrorMessage() const = 0;
+            };
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+            using InputAcceptedCallback = std::function<void(const std::string&)>;
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+            InputOverlay();
+            virtual ~InputOverlay();
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+            InputOverlay& SetTitle(const std::string& title);
+            InputOverlay& SetText(const std::string& text);
+            InputOverlay& SetInputAcceptedCallback(InputAcceptedCallback cb);
+            InputOverlay& SetValidator(std::shared_ptr<IValidator> validator);
+            InputOverlay& SetWidth(int width);
+            InputOverlay& SetInputMode(IInput::InputMode mode);
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
+            virtual void Layout();
+            virtual bool KeyPress(const std::string& key);
 
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+        protected:
+            virtual void OnVisibilityChanged(bool visible);
+            virtual void OnInputEnterPressed(TextInput* input);
+            virtual void OnInputKeyPress(TextInput* input, std::string key);
+
+        private:
+            void Redraw();
+            void RecalculateSize();
+
+            std::string title, text;
+            int x, y;
+            int width, height;
+            int setWidth;
+            std::shared_ptr<TextInput> textInput;
+            std::shared_ptr<IValidator> validator;
+            InputAcceptedCallback inputAcceptedCallback;
+    };
 }

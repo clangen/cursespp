@@ -32,33 +32,50 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <string>
+#include <memory>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class ScrollableWindow;
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+    class IScrollAdapter {
+        public:
+            virtual ~IScrollAdapter() { }
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+            struct ScrollPosition {
+                ScrollPosition() {
+                    firstVisibleEntryIndex = 0;
+                    visibleEntryCount = 0;
+                    lineCount = 0;
+                    logicalIndex = 0;
+                    totalEntries = 0;
+                }
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+                size_t firstVisibleEntryIndex;
+                size_t visibleEntryCount;
+                size_t lineCount;
+                size_t totalEntries;
+                size_t logicalIndex;
+            };
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
+            class IEntry {
+                public:
+                    virtual ~IEntry() { }
+                    virtual size_t GetLineCount() = 0;
+                    virtual std::string GetLine(size_t line) = 0;
+                    virtual void SetWidth(size_t width) = 0;
+                    virtual int64_t GetAttrs(size_t line) = 0;
+            };
 
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+            typedef std::shared_ptr<IEntry> EntryPtr;
+
+            virtual void SetDisplaySize(size_t width, size_t height) = 0;
+            virtual size_t GetEntryCount() = 0;
+            virtual EntryPtr GetEntry(ScrollableWindow* window, size_t index) = 0;
+            virtual void DrawPage(ScrollableWindow* window, size_t index, ScrollPosition& result) = 0;
+    };
+
+    typedef std::shared_ptr<IScrollAdapter> IScrollAdapterPtr;
 }

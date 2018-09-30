@@ -32,33 +32,34 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#include <cursespp/curses_config.h>
+#include <cursespp/ScrollAdapterBase.h>
+#include <deque>
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+namespace cursespp {
+    class SimpleScrollAdapter : public ScrollAdapterBase {
+        public:
+            SimpleScrollAdapter();
+            virtual ~SimpleScrollAdapter();
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+            virtual void AddEntry(EntryPtr entry);
+            virtual void SetMaxEntries(const size_t size = 500);
+            virtual void Clear();
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+            virtual size_t GetEntryCount();
+            virtual EntryPtr GetEntry(cursespp::ScrollableWindow* window, size_t index);
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+            void SetSelectable(bool selectable);
+            void AddEntry(const std::string& entry);
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
+        private:
+            typedef std::deque<EntryPtr> EntryList; /* TODO: this is O(n) lookup */
+            typedef EntryList::iterator Iterator;
 
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+            EntryList entries;
+            size_t maxEntries;
+            bool selectable;
+    };
 }

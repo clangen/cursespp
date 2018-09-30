@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,11 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
-#include "OverlayStack.h"
-#include "DialogOverlay.h"
-#include "Colors.h"
-#include "Screen.h"
+#include <cursespp/OverlayStack.h>
+#include <cursespp/DialogOverlay.h>
+#include <cursespp/Colors.h>
+#include <cursespp/Screen.h>
 
 using namespace cursespp;
 

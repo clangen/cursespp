@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,14 +32,14 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
-#include "Text.h"
-#include "utfutil.h"
-
+#include <cursespp/curses_config.h>
+#include <cursespp/Text.h>
+#include <f8n/utf/conv.h>
 #include <math.h>
-
 #include <unordered_map>
 #include <algorithm>
+
+using namespace f8n::utf;
 
 #define PAD(str, count) for (size_t i = 0; i < count; i++) { str += " "; }
 
@@ -49,11 +49,14 @@ namespace cursespp {
             /* not a simple substr anymore, gotta deal with multi-byte
             characters... */
             if (u8cols(str) > len) {
+                auto prev = str.begin();
                 auto it = str.begin();
                 auto end = str.end();
 
-                size_t c = 0;
-                while (c < len && it != str.end()) {
+                size_t cols = 0;
+                while (cols <= len && it != str.end()) {
+                    prev = it;
+
                     try {
                         utf8::next(it, end);
                     }
@@ -62,10 +65,10 @@ namespace cursespp {
                         ++it;
                     }
 
-                    ++c;
+                    cols += u8cols(std::string(prev, it));
                 }
 
-                return std::string(str.begin(), it);
+                return std::string(str.begin(), prev);
             }
 
             return str;
@@ -73,7 +76,14 @@ namespace cursespp {
 
         std::string Ellipsize(const std::string& str, size_t len) {
             if (u8cols(str) > len) {
-                return Truncate(str, len - 2) + "..";
+                std::string trunc = Truncate(str, len - 2);
+
+                size_t tlen = u8cols(trunc);
+                for (size_t i = tlen; i < len; i++) {
+                    trunc += ".";
+                }
+
+                return trunc;
             }
 
             return str;
@@ -107,7 +117,7 @@ namespace cursespp {
         }
 
         /* not rocket science, but stolen from http://stackoverflow.com/a/1493195 */
-        std::vector<std::string> Split(const std::string& str, std::string delimiters, bool trimEmpty) {
+        std::vector<std::string> Split(const std::string& str, const std::string& delimiters, bool trimEmpty) {
             using ContainerT = std::vector<std::string>;
             ContainerT tokens;
             std::string::size_type pos, lastPos = 0, length = str.length();
@@ -271,30 +281,37 @@ namespace cursespp {
 
     namespace key {
        static std::unordered_map<std::string, std::string> KEY_MAPPING = {
-            { "M-~",        "M-`" },
-            { "M-bquote",   "M-`" },
-            { "^@",         "M-`" },
-            { "M-comma",    "M-," },
-            { "M-stop",     "M-." },
-            { "^H",         "KEY_BACKSPACE" },
-            { "^?",         "KEY_BACKSPACE" },
-            { "M-^H",       "M-KEY_BACKSPACE" },
-            { "M-^?",       "M-KEY_BACKSPACE" },
-            { "M-bksp",     "M-KEY_BACKSPACE" },
-            { "^M",         "KEY_ENTER" }
-        };
+            { "M-~",         "M-`" },
+            { "M-bquote",    "M-`" },
+            { "^@",          "M-`" },
+            { "M-comma",     "M-," },
+            { "M-stop",      "M-." },
+            { "^H",          "KEY_BACKSPACE" },
+            { "^?",          "KEY_BACKSPACE" },
+            { "M-^H",        "M-KEY_BACKSPACE" },
+            { "M-^?",        "M-KEY_BACKSPACE" },
+            { "M-bksp",      "M-KEY_BACKSPACE" },
+            { "^M",          "KEY_ENTER" },
+            { "M-^M",        "M-enter" },
+            { "kUP3",        "M-up" },
+            { "kDN3",        "M-down" },
+            { "M-KEY_UP",    "M-up" },
+            { "M-KEY_DOWN",  "M-down" },
+            { "kUP5",        "CTL_UP" },
+            { "kDN5",        "CTL_DOWN" }
+       };
 
         std::string Normalize(const std::string& kn) {
             auto it = KEY_MAPPING.find(kn);
             return (it != KEY_MAPPING.end()) ? it->second : kn;
         }
 
-        std::string Read(cursespp_int64 ch) {
+        std::string Read(int64_t ch) {
             std::string kn = keyname((int)ch);
 
             /* convert +ESC to M- sequences */
             if (kn == "^[") {
-                cursespp_int64 next = getch();
+                int64_t next = getch();
                 if (next != -1) {
                     kn = std::string("M-") + std::string(keyname((int)next));
                 }

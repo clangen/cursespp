@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,20 +32,20 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
-
-#include "ShortcutsWindow.h"
-#include "Colors.h"
-#include "Text.h"
-#include "utfutil.h"
+#include <cursespp/ShortcutsWindow.h>
+#include <cursespp/Colors.h>
+#include <cursespp/Text.h>
+#include <f8n/utf/conv.h>
 
 using namespace cursespp;
+using namespace f8n::utf;
 
 ShortcutsWindow::ShortcutsWindow()
 : Window(nullptr)
 , alignment(text::AlignCenter) {
     this->SetFrameVisible(false);
-    this->UpdateContentColor();
+    this->SetFocusedContentColor(CURSESPP_SHORTCUT_ROW_FOCUSED);
+    this->SetContentColor(CURSESPP_SHORTCUT_ROW_NORMAL);
 }
 
 ShortcutsWindow::~ShortcutsWindow() {
@@ -53,39 +53,30 @@ ShortcutsWindow::~ShortcutsWindow() {
 
 void ShortcutsWindow::SetAlignment(text::TextAlign align) {
     this->alignment = align;
-    this->Repaint();
+    this->Redraw();
 }
 
 void ShortcutsWindow::AddShortcut(
     const std::string& key,
     const std::string& description,
-    cursespp_int64 attrs)
+    int64_t attrs)
 {
     this->entries.push_back(
         std::shared_ptr<Entry>(new Entry(key, description, attrs)));
 
-    this->Repaint();
+    this->Redraw();
 }
 
 void ShortcutsWindow::RemoveAll() {
     this->entries.clear();
-    this->Repaint();
+    this->activeKey = this->originalKey = "";
+    this->Redraw();
 }
 
 void ShortcutsWindow::SetActive(const std::string& key) {
     this->activeKey = key;
-    this->Repaint();
-}
-
-void ShortcutsWindow::OnFocusChanged(bool focused) {
-    this->UpdateContentColor();
-    this->Repaint();
-}
-
-void ShortcutsWindow::UpdateContentColor() {
-    this->SetContentColor(this->IsFocused()
-        ? CURSESPP_SHORTCUT_ROW_FOCUSED
-        : CURSESPP_SHORTCUT_ROW_NORMAL);
+    this->originalKey = "";
+    this->Redraw();
 }
 
 size_t ShortcutsWindow::CalculateLeftPadding() {
@@ -111,27 +102,116 @@ size_t ShortcutsWindow::CalculateLeftPadding() {
     return (padding / 2); /* text::AlignCenter */
 }
 
-void ShortcutsWindow::Repaint() {
-    Window::Repaint();
+void ShortcutsWindow::SetChangedCallback(ChangedCallback callback) {
+    this->changedCallback = callback;
+}
 
+bool ShortcutsWindow::KeyPress(const std::string& key) {
+    if (this->changedCallback && this->IsFocused()) {
+        int count = (int) this->entries.size();
+        if (count > 0) {
+            auto& keys = NavigationKeys();
+
+            if (keys.Right(key)) {
+                int active = getActiveIndex();
+                if (active >= 0 && active + 1 < count) {
+                    this->activeKey = this->entries[active + 1]->key;
+                }
+                else {
+                    this->activeKey = this->entries[0]->key;
+                }
+                this->Redraw();
+                return true;
+            }
+            else if (keys.Left(key)) {
+                int active = getActiveIndex();
+                if (active > 0) {
+                    this->activeKey = this->entries[active - 1]->key;
+                }
+                else {
+                    this->activeKey = this->entries[count - 1]->key;
+                }
+                this->Redraw();
+                return true;
+            }
+            else if (key == "KEY_ENTER") {
+                /* replace the original key we cached when we were forcused originally
+                to "commit" the operation, as it'll be swapped back when we lose focus */
+                this->originalKey = this->activeKey;
+
+                if (this->changedCallback) {
+                    this->changedCallback(this->activeKey);
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool ShortcutsWindow::MouseEvent(const IMouseHandler::Event& mouseEvent) {
+    if (mouseEvent.Button1Clicked()) {
+        for (auto entry : this->entries) {
+            auto& pos = entry->position;
+            if (mouseEvent.x >= pos.offset &&
+                mouseEvent.x < pos.offset + pos.width)
+            {
+                this->activeKey = entry->key;
+
+                this->Redraw();
+
+                if (this->changedCallback) {
+                    this->changedCallback(this->activeKey);
+                }
+
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void ShortcutsWindow::OnFocusChanged(bool focused) {
+    if (focused) {
+        this->originalKey = this->activeKey;
+    }
+    else {
+        if (this->originalKey.size()) {
+            this->activeKey = this->originalKey;
+            this->originalKey = "";
+            this->Redraw();
+        }
+    }
+}
+
+int ShortcutsWindow::getActiveIndex() {
+    for (int i = 0; i < (int) this->entries.size(); i++) {
+        if (this->entries[i]->key == this->activeKey) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void ShortcutsWindow::OnRedraw() {
     this->Clear();
 
-    cursespp_int64 normalAttrs = COLOR_PAIR(CURSESPP_BUTTON_NORMAL);
-    cursespp_int64 activeAttrs = COLOR_PAIR(CURSESPP_BUTTON_HIGHLIGHTED);
+    int64_t normalAttrs = COLOR_PAIR(CURSESPP_BUTTON_NORMAL);
+    int64_t activeAttrs = COLOR_PAIR(CURSESPP_BUTTON_HIGHLIGHTED);
 
     WINDOW* c = this->GetContent();
 
     size_t leftPadding = this->CalculateLeftPadding();
     wmove(c, 0, leftPadding);
 
+    size_t currentX = leftPadding;
     size_t remaining = this->GetContentWidth();
     for (size_t i = 0; i < this->entries.size() && remaining > 0; i++) {
         auto e = this->entries[i];
 
-        cursespp_int64 keyAttrs = (e->attrs == -1) ? normalAttrs : COLOR_PAIR(e->attrs);
+        int64_t keyAttrs = (e->attrs == -1) ? normalAttrs : COLOR_PAIR(e->attrs);
         keyAttrs = (e->key == this->activeKey) ? activeAttrs : keyAttrs;
 
-        wprintw(c, " ");
+        checked_wprintw(c, " ");
         --remaining;
 
         if (remaining == 0) {
@@ -141,6 +221,14 @@ void ShortcutsWindow::Repaint() {
         std::string key = " " + e->key + " ";
         std::string value = " " + e->description + " ";
 
+        /* calculate the offset and width, this is used for mouse
+        click handling! */
+        size_t width = u8cols(key + value);
+        e->position.offset = currentX;
+        e->position.width = width;
+        currentX += 1 + width; /* 1 is the extra leading space */
+
+        /* draw the shortcut key */
         size_t len = u8cols(key);
         if (len > remaining) {
             key = text::Ellipsize(key, remaining);
@@ -148,7 +236,7 @@ void ShortcutsWindow::Repaint() {
         }
 
         wattron(c, keyAttrs);
-        wprintw(c, key.c_str());
+        checked_wprintw(c, key.c_str());
         wattroff(c, keyAttrs);
 
         remaining -= len;
@@ -157,14 +245,14 @@ void ShortcutsWindow::Repaint() {
             continue;
         }
 
+        /* draw the description */
         len = u8cols(value);
         if (len > remaining) {
             value = text::Ellipsize(value, remaining);
             len = remaining;
         }
 
-        wprintw(c, value.c_str());
-
+        checked_wprintw(c, value.c_str());
         remaining -= len;
     }
 }

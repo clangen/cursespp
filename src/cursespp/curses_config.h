@@ -32,33 +32,29 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#pragma once
 
-using namespace cursespp;
-using namespace f8n::utf;
+#ifdef WIN32
+#define PDC_WIDE
+#define PDC_FORCE_UTF8
+#endif
 
-SingleLineEntry::SingleLineEntry(const std::string& value) {
-    this->value = value;
-    this->attrs = -1;
-}
+#if defined(WIN32) || defined(__APPLE__) || defined(NO_NCURSESW)
+    #include <curses.h>
+    #include <panel.h>
+#else
+    #include <ncursesw/curses.h>
+    #include <ncursesw/panel.h>
+#endif
 
-void SingleLineEntry::SetWidth(size_t width) {
-    this->width = width;
-}
+#ifdef WIN32
+#undef MOUSE_MOVED
+#endif
 
-int64_t SingleLineEntry::GetAttrs(size_t line) {
-    return this->attrs;
-}
+#include <stdarg.h>
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
-    this->attrs = attrs;
-}
+#define checked_wprintw(window, format, ...) \
+    if (window && format) { wprintw(window, format, ##__VA_ARGS__); }
 
-size_t SingleLineEntry::GetLineCount() {
-    return 1;
-}
-
-std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
-}
+#define checked_waddstr(window, str) \
+    if (window && str) { waddstr(window, str); }

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2016 casey langen
+// Copyright (c) 2007-2017 musikcube team
 //
 // All rights reserved.
 //
@@ -32,51 +32,96 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include <cursespp/Screen.h>
+#include <cursespp/Colors.h>
+#include <cursespp/Text.h>
+#include <cursespp/ILayout.h>
 
-#include "Screen.h"
-#include "Colors.h"
-#include "MessageQueue.h"
-#include "Message.h"
-#include "Text.h"
-
-#include "TextLabel.h"
+#include <cursespp/TextLabel.h>
 
 using namespace cursespp;
-
-inline static void redrawContents(
-    IWindow &window, 
-    const text::TextAlign alignment,
-    const std::string& text) 
-{
-    std::string aligned = text::Align(
-        text, alignment, window.GetContentWidth());
-
-    WINDOW* c = window.GetContent();
-    werase(c);
-    wprintw(c, aligned.c_str());
-
-    window.Repaint();
-}
 
 TextLabel::TextLabel()
 : Window()
 , alignment(text::AlignLeft) {
     this->SetFrameVisible(false);
+    this->SetContentColor(CURSESPP_DEFAULT_COLOR);
+    this->SetFocusedContentColor(CURSESPP_TEXT_FOCUSED);
+    this->bold = false;
 }
 
 TextLabel::~TextLabel() {
 }
 
-void TextLabel::Show() {
-    Window::Show();
-    redrawContents(*this, this->alignment, this->buffer);
+void TextLabel::OnRedraw() {
+    std::string aligned = text::Align(
+        this->buffer, alignment, this->GetContentWidth());
+
+    WINDOW* c = this->GetContent();
+
+    int64_t attrs = this->GetContentColor();
+    if (attrs != -1) {
+        wbkgd(c, COLOR_PAIR(attrs));
+    }
+    else {
+        werase(c);
+    }
+
+    attrs = this->IsFocused()
+        ? this->GetFocusedContentColor()
+        : this->GetContentColor();
+
+    if (attrs != -1) {
+        wattron(c, COLOR_PAIR(attrs));
+    }
+
+    if (this->bold) {
+        wattron(c, A_BOLD);
+    }
+
+    wmove(c, 0, 0);
+    checked_waddstr(c, aligned.c_str());
+
+    if (this->bold) {
+        wattroff(c, A_BOLD);
+    }
+
+    if (attrs != -1) {
+        wattroff(c, COLOR_PAIR(attrs));
+    }
 }
 
 void TextLabel::SetText(const std::string& value, const text::TextAlign alignment) {
     if (value != this->buffer || alignment != this->alignment) {
         this->buffer = value;
         this->alignment = alignment;
-        redrawContents(*this, alignment, buffer);
+        this->Redraw();
     }
+}
+
+void TextLabel::SetBold(bool bold) {
+    if (bold != this->bold) {
+        this->bold = bold;
+        this->Redraw();
+    }
+}
+
+bool TextLabel::KeyPress(const std::string& key) {
+    if (this->IsFocused()) {
+        if (key == " " || key == "KEY_ENTER") {
+            this->Activated(this);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool TextLabel::MouseEvent(const IMouseHandler::Event& event) {
+    if (event.Button1Clicked()) {
+        this->FocusInParent();
+        this->Activated(this);
+        return true;
+    }
+    return false;
 }

@@ -1,2 +1,201 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" />
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{61ae9808-a033-4f22-813b-9a6a821dd022}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\include">
+      <UniqueIdentifier>{cea7ec5b-4319-4f9b-8a83-fcb732a3fc36}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cursespp\Checkbox.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\Colors.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\curses_config.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\DialogOverlay.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\IDisplayable.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\IInput.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\IKeyHandler.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\ILayout.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\IMouseHandler.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\INavigationKeys.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\InputOverlay.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\IOrderable.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\IOverlay.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\IScrollable.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\IScrollAdapter.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\IViewRoot.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\IWindow.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\IWindowGroup.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\LayoutBase.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\ListOverlay.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\ListWindow.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\MultiLineEntry.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\OverlayBase.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\OverlayStack.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\Screen.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\ScrollableWindow.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\ScrollAdapterBase.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\Scrollbar.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\ShortcutsWindow.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\SimpleScrollAdapter.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\SingleLineEntry.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\Text.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\TextInput.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\TextLabel.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\ToastOverlay.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\Win32Util.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\Window.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\App.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="LayoutBase.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="ListOverlay.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="ListWindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="MultiLineEntry.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="OverlayStack.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="ScrollableWindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="ScrollAdapterBase.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Scrollbar.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="ShortcutsWindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleScrollAdapter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="SingleLineEntry.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Text.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="TextInput.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="TextLabel.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="ToastOverlay.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Win32Util.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Window.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="App.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Checkbox.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Colors.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="DialogOverlay.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="IMouseHandler.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="InputOverlay.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
