@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifdef WIN32
 
 #include <cursespp/Win32Util.h>
 #include <f8n/utf/conv.h>
@@ -42,8 +42,6 @@
 #include <string>
 
 using namespace f8n::utf;
-
-#ifdef WIN32
 
 #define WM_TRAYICON (WM_USER + 2000)
 #define WM_SHOW_OTHER_INSTANCE (WM_USER + 2001)
