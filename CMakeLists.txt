@@ -63,9 +63,9 @@ add_subdirectory("${cursespp_SOURCE_DIR}/f8n")
 add_dependencies(cursespp f8n)
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
-  target_link_libraries(cursespp ncursesw panelw)
+  target_link_libraries(cursespp ncursesw panelw f8n)
 else (CMAKE_SYSTEM_NAME MATCHES "Linux")
-  target_link_libraries(cursespp curses panel)
+  target_link_libraries(cursespp curses panel f8n)
 endif (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 file(GLOB sdk_headers "src/*.h")
