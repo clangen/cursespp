@@ -46,6 +46,8 @@
 
 #ifdef WIN32
 #include <cursespp/Win32Util.h>
+#undef MOUSE_MOVED
+#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #endif
 
 #ifndef WIN32
@@ -94,12 +96,14 @@ App::App(const std::string& title) {
 #ifdef WIN32
     this->iconId = 0;
     this->appTitle = title;
+    this->colorMode = Colors::RGB;
     win32::ConfigureDpiAwareness();
 #else
     setlocale(LC_ALL, "");
     std::signal(SIGWINCH, resizedHandler);
     std::signal(SIGHUP, hangupHandler);
     std::signal(SIGPIPE, SIG_IGN);
+    this->colorMode = Colors::Palette;
 #endif
 
 #ifdef __PDCURSES__
