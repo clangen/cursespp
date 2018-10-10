@@ -52,6 +52,7 @@
 
 #ifndef WIN32
 #include <csignal>
+#include <locale.h>
 #endif
 
 using namespace cursespp;
