@@ -54,9 +54,6 @@
     <ClInclude Include="cursespp\IScrollAdapter.h">
       <Filter>src\include</Filter>
     </ClInclude>
-    <ClInclude Include="cursespp\IViewRoot.h">
-      <Filter>src\include</Filter>
-    </ClInclude>
     <ClInclude Include="cursespp\IWindow.h">
       <Filter>src\include</Filter>
     </ClInclude>

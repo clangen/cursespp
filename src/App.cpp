@@ -213,8 +213,9 @@ void App::OnResized() {
         Window::Unfreeze();
 
         if (this->state.layout) {
-            if (this->state.viewRoot) {
-                this->state.viewRoot->ResizeToViewport();
+            if (this->state.rootWindow) {
+                this->state.rootWindow->MoveAndResize(
+                    0, 0, Screen::GetWidth(), Screen::GetHeight());
             }
 
             this->state.layout->Layout();
@@ -461,10 +462,11 @@ void App::ChangeLayout(ILayoutPtr newLayout) {
 
     if (newLayout) {
         this->state.layout = newLayout;
-        this->state.viewRoot = dynamic_cast<IViewRoot*>(this->state.layout.get());
+        this->state.rootWindow = dynamic_cast<IWindow*>(this->state.layout.get());
 
-        if (this->state.viewRoot) {
-            this->state.viewRoot->ResizeToViewport();
+        if (this->state.rootWindow) {
+            this->state.rootWindow->MoveAndResize(
+                0, 0, Screen::GetWidth(), Screen::GetHeight());
         }
 
         this->state.layout->Show();
