@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cursespp\App.h" />
+    <ClInclude Include="cursespp\AppLayout.h" />
     <ClInclude Include="cursespp\Checkbox.h" />
     <ClInclude Include="cursespp\Colors.h" />
     <ClInclude Include="cursespp\curses_config.h" />
@@ -27,6 +28,7 @@
     <ClInclude Include="cursespp\IOverlay.h" />
     <ClInclude Include="cursespp\IScrollable.h" />
     <ClInclude Include="cursespp\IScrollAdapter.h" />
+    <ClInclude Include="cursespp\ITopLevelLayout.h" />
     <ClInclude Include="cursespp\IWindow.h" />
     <ClInclude Include="cursespp\IWindowGroup.h" />
     <ClInclude Include="cursespp\LayoutBase.h" />
@@ -51,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="AppLayout.cpp" />
     <ClCompile Include="Checkbox.cpp" />
     <ClCompile Include="Colors.cpp" />
     <ClCompile Include="DialogOverlay.cpp" />

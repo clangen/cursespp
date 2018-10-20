@@ -31,30 +31,31 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 endif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 
 set (CURSESPP_SRCS
-  ./src/Colors.cpp
-  ./src/Win32Util.cpp
   ./src/App.cpp
-  ./src/TextLabel.cpp
-  ./src/Text.cpp
-  ./src/ListWindow.cpp
-  ./src/IMouseHandler.cpp
-  ./src/SingleLineEntry.cpp
+  ./src/AppLayout.cpp
   ./src/Checkbox.cpp
-  ./src/ToastOverlay.cpp
+  ./src/Colors.cpp
   ./src/DialogOverlay.cpp
-  ./src/Window.cpp
-  ./src/TextInput.cpp
-  ./src/ShortcutsWindow.cpp
-  ./src/LayoutBase.cpp
-  ./src/Scrollbar.cpp
-  ./src/Screen.cpp
-  ./src/OverlayStack.cpp
-  ./src/ScrollAdapterBase.cpp
+  ./src/IMouseHandler.cpp
   ./src/InputOverlay.cpp
-  ./src/SimpleScrollAdapter.cpp
-  ./src/MultiLineEntry.cpp
-  ./src/ScrollableWindow.cpp
+  ./src/LayoutBase.cpp
+  ./src/ListWindow.cpp
   ./src/ListOverlay.cpp
+  ./src/MultiLineEntry.cpp
+  ./src/OverlayStack.cpp
+  ./src/Screen.cpp
+  ./src/Scrollbar.cpp
+  ./src/ScrollAdapterBase.cpp
+  ./src/ScrollableWindow.cpp
+  ./src/ShortcutsWindow.cpp
+  ./src/SimpleScrollAdapter.cpp
+  ./src/SingleLineEntry.cpp
+  ./src/Text.cpp
+  ./src/TextLabel.cpp
+  ./src/TextInput.cpp
+  ./src/ToastOverlay.cpp
+  ./src/Win32Util.cpp
+  ./src/Window.cpp
 )
 
 add_library(cursespp STATIC ${CURSESPP_SRCS})

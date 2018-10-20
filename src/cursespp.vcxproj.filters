@@ -120,6 +120,12 @@
     <ClInclude Include="cursespp\App.h">
       <Filter>src\include</Filter>
     </ClInclude>
+    <ClInclude Include="cursespp\ITopLevelLayout.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
+    <ClInclude Include="cursespp\AppLayout.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LayoutBase.cpp">
@@ -192,6 +198,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="InputOverlay.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="AppLayout.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
