@@ -383,6 +383,7 @@ void Window::SetContentColor(int64_t color) {
         ? CURSESPP_DEFAULT_CONTENT_COLOR : color;
 
     this->RepaintBackground();
+    this->Redraw();
 }
 
 void Window::SetFocusedContentColor(int64_t color) {
@@ -390,6 +391,7 @@ void Window::SetFocusedContentColor(int64_t color) {
         ? CURSESPP_DEFAULT_CONTENT_COLOR : color;
 
     this->RepaintBackground();
+    this->Redraw();
 }
 
 void Window::SetFrameColor(int64_t color) {
@@ -397,6 +399,7 @@ void Window::SetFrameColor(int64_t color) {
         ? CURSESPP_DEFAULT_FRAME_COLOR : color;
 
     this->RepaintBackground();
+    this->Redraw();
 }
 
 void Window::SetFocusedFrameColor(int64_t color) {
@@ -404,6 +407,7 @@ void Window::SetFocusedFrameColor(int64_t color) {
         ? CURSESPP_FOCUSED_FRAME_COLOR : color;
 
     this->RepaintBackground();
+    this->Redraw();
 }
 
 void Window::DrawFrameAndTitle() {
@@ -431,6 +435,7 @@ void Window::RepaintBackground() {
         this->frame &&
         this->content != this->frame)
     {
+        wclear(this->frame);
         wbkgd(this->frame, COLOR_PAIR(focused
             ? this->focusedFrameColor : this->frameColor));
 
@@ -438,6 +443,7 @@ void Window::RepaintBackground() {
     }
 
     if (this->content) {
+        wclear(this->content);
         wbkgd(this->content, COLOR_PAIR(focused
             ? this->focusedContentColor : this->contentColor));
     }
@@ -656,10 +662,7 @@ void Window::Create() {
 
         if (!this->drawFrame) {
             this->content = this->frame;
-
-            if (currentContentColor != CURSESPP_DEFAULT_COLOR) {
-                wbkgd(this->frame, COLOR_PAIR(currentContentColor));
-            }
+            this->RepaintBackground();
         }
 
         /* otherwise we'll draw a box around the frame, and create a content
@@ -680,15 +683,7 @@ void Window::Create() {
             }
 
             this->contentPanel = new_panel(this->content);
-
-            if (currentFrameColor != CURSESPP_DEFAULT_COLOR) {
-                wbkgd(this->frame, COLOR_PAIR(currentFrameColor));
-            }
-
-            if (currentContentColor != CURSESPP_DEFAULT_COLOR) {
-                wbkgd(this->content, COLOR_PAIR(currentContentColor));
-            }
-
+            this->RepaintBackground();
             this->DrawFrameAndTitle();
         }
 

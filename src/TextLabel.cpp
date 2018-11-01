@@ -59,36 +59,10 @@ void TextLabel::OnRedraw() {
 
     WINDOW* c = this->GetContent();
 
-    int64_t attrs = this->GetContentColor();
-    if (attrs != -1) {
-        wbkgd(c, COLOR_PAIR(attrs));
-    }
-    else {
-        werase(c);
-    }
-
-    attrs = this->IsFocused()
-        ? this->GetFocusedContentColor()
-        : this->GetContentColor();
-
-    if (attrs != -1) {
-        wattron(c, COLOR_PAIR(attrs));
-    }
-
-    if (this->bold) {
-        wattron(c, A_BOLD);
-    }
-
+    if (this->bold) { wattron(c, A_BOLD); }
     wmove(c, 0, 0);
     checked_waddstr(c, aligned.c_str());
-
-    if (this->bold) {
-        wattroff(c, A_BOLD);
-    }
-
-    if (attrs != -1) {
-        wattroff(c, COLOR_PAIR(attrs));
-    }
+    if (this->bold) { wattroff(c, A_BOLD); }
 }
 
 void TextLabel::SetText(const std::string& value, const text::TextAlign alignment) {
