@@ -151,6 +151,10 @@ void App::SetColorMode(Colors::Mode mode) {
     this->colorMode = mode;
 }
 
+void App::SetColorBackgroundType(Colors::BgType bgType) {
+    this->bgType = bgType;
+}
+
 void App::SetColorTheme(const std::string& colorTheme) {
     this->colorTheme = colorTheme;
 }
@@ -265,7 +269,7 @@ void App::Run(ILayoutPtr layout) {
     }
 #endif
 
-    Colors::Init(this->colorMode);
+    Colors::Init(this->colorMode, this->bgType);
 
     if (this->colorTheme.size()) {
         Colors::SetTheme(this->colorTheme);
