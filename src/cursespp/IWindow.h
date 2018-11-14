@@ -35,6 +35,7 @@
 #pragma once
 
 #include <cursespp/curses_config.h>
+#include <cursespp/Colors.h>
 #include <cursespp/IDisplayable.h>
 #include <cursespp/IOrderable.h>
 #include <cursespp/IMouseHandler.h>
@@ -58,14 +59,14 @@ namespace cursespp {
             virtual void SetParent(IWindow* parent) = 0;
             virtual void Focus() = 0;
             virtual void Blur() = 0;
-            virtual void SetContentColor(int64_t color) = 0;
-            virtual void SetFrameColor(int64_t color) = 0;
-            virtual void SetFocusedFrameColor(int64_t color) = 0;
-            virtual void SetFocusedContentColor(int64_t color) = 0;
-            virtual int64_t GetContentColor() = 0;
-            virtual int64_t GetFrameColor() = 0;
-            virtual int64_t GetFocusedContentColor() = 0;
-            virtual int64_t GetFocusedFrameColor() = 0;
+            virtual void SetContentColor(Color color) = 0;
+            virtual void SetFrameColor(Color color) = 0;
+            virtual void SetFocusedFrameColor(Color color) = 0;
+            virtual void SetFocusedContentColor(Color color) = 0;
+            virtual Color GetContentColor() = 0;
+            virtual Color GetFrameColor() = 0;
+            virtual Color GetFocusedContentColor() = 0;
+            virtual Color GetFocusedFrameColor() = 0;
             virtual void SetFrameVisible(bool visible) = 0;
             virtual bool IsFrameVisible() = 0;
             virtual void SetSize(int width, int height) = 0;

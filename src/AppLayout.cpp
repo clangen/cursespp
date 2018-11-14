@@ -99,7 +99,7 @@ void AppLayout::Initialize() {
 
 #if ENABLE_DEMO_MODE
     this->hotkey.reset(new TextLabel());
-    this->hotkey->SetContentColor(CURSESPP_FOOTER);
+    this->hotkey->SetContentColor(Color::Footer);
     this->hotkey->SetText("keypress: <none>", text::AlignCenter);
     this->AddWindow(this->hotkey);
 #endif

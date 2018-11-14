@@ -45,8 +45,8 @@ TextLabel::TextLabel()
 : Window()
 , alignment(text::AlignLeft) {
     this->SetFrameVisible(false);
-    this->SetContentColor(CURSESPP_DEFAULT_COLOR);
-    this->SetFocusedContentColor(CURSESPP_TEXT_FOCUSED);
+    this->SetContentColor(Color::Default);
+    this->SetFocusedContentColor(Color::TextFocused);
     this->bold = false;
 }
 

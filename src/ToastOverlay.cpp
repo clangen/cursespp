@@ -56,8 +56,8 @@ ToastOverlay::ToastOverlay(const std::string& text, long durationMs) {
     this->width = this->height = 0;
     this->ticking = false;
     this->SetFrameVisible(true);
-    this->SetFrameColor(CURSESPP_OVERLAY_FRAME);
-    this->SetContentColor(CURSESPP_OVERLAY_CONTENT);
+    this->SetFrameColor(Color::OverlayFrame);
+    this->SetContentColor(Color::OverlayContent);
 }
 
 ToastOverlay::~ToastOverlay() {

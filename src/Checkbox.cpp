@@ -48,7 +48,7 @@ Checkbox::Checkbox()
 : Window()
 , checked(false) {
     this->SetFrameVisible(false);
-    this->SetFocusedContentColor(CURSESPP_TEXT_FOCUSED);
+    this->SetFocusedContentColor(Color::TextFocused);
 }
 
 Checkbox::~Checkbox() {
@@ -86,13 +86,13 @@ void Checkbox::OnRedraw() {
             : this->GetContentColor();
 
         if (attrs != -1) {
-            wattron(c, COLOR_PAIR(attrs));
+            wattron(c, attrs);
         }
 
         checked_wprintw(c, ellipsized.c_str());
 
         if (attrs != -1) {
-            wattroff(c, COLOR_PAIR(attrs));
+            wattroff(c, attrs);
         }
     }
 }

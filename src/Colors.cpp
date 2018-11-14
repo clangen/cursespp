@@ -139,8 +139,8 @@ palette, use ones that most closely match our desired colors */
 #define SCALE(x) ((x * 1000) / 255)
 
 struct Theme {
-    struct Color {
-        Color() {
+    struct ColorWrapper {
+        ColorWrapper() {
             Set(0, 0, 0, 0, -1);
         }
 
@@ -335,143 +335,143 @@ struct Theme {
         int foregroundId = foreground.Id(mode, -1);
 
         /* main */
-        init_pair(CURSESPP_DEFAULT_CONTENT_COLOR, foregroundId, backgroundId);
-        init_pair(CURSESPP_DEFAULT_FRAME_COLOR, foregroundId, backgroundId);
-        init_pair(CURSESPP_FOCUSED_FRAME_COLOR, focusedBorder.Id(mode, COLOR_RED),backgroundId);
+        init_pair(Color::ContentColorDefault, foregroundId, backgroundId);
+        init_pair(Color::FrameColorDefault, foregroundId, backgroundId);
+        init_pair(Color::FrameColorFocused, focusedBorder.Id(mode, COLOR_RED),backgroundId);
 
         /* text */
-        init_pair(CURSESPP_TEXT_DEFAULT, foregroundId, backgroundId);
-        init_pair(CURSESPP_TEXT_DISABLED, textDisabled.Id(mode, -1), backgroundId);
-        init_pair(CURSESPP_TEXT_FOCUSED, textFocused.Id(mode, COLOR_RED), backgroundId);
-        init_pair(CURSESPP_TEXT_ACTIVE, textActive.Id(mode, COLOR_GREEN), backgroundId);
-        init_pair(CURSESPP_TEXT_WARNING, textWarning.Id(mode, COLOR_YELLOW), backgroundId);
-        init_pair(CURSESPP_TEXT_ERROR, textError.Id(mode, COLOR_RED), backgroundId);
-        init_pair(CURSESPP_TEXT_HIDDEN, textHidden.Id(mode, COLOR_BLACK), backgroundId);
+        init_pair(Color::TextDefault, foregroundId, backgroundId);
+        init_pair(Color::TextDisabled, textDisabled.Id(mode, -1), backgroundId);
+        init_pair(Color::TextFocused, textFocused.Id(mode, COLOR_RED), backgroundId);
+        init_pair(Color::TextActive, textActive.Id(mode, COLOR_GREEN), backgroundId);
+        init_pair(Color::TextWarning, textWarning.Id(mode, COLOR_YELLOW), backgroundId);
+        init_pair(Color::TextError, textError.Id(mode, COLOR_RED), backgroundId);
+        init_pair(Color::TextHidden, textHidden.Id(mode, COLOR_BLACK), backgroundId);
 
         /* overlay */
         int overlayBgId = overlayBackground.Id(mode, -1);
-        init_pair(CURSESPP_OVERLAY_FRAME, overlayBorder.Id(mode, COLOR_BLUE), overlayBgId);
-        init_pair(CURSESPP_OVERLAY_CONTENT, overlayForeground.Id(mode, -1), overlayBgId);
-        init_pair(CURSESPP_OVERLAY_INPUT_FRAME, overlayFocusedBorder.Id(mode, COLOR_RED), overlayBgId);
-        init_pair(CURSESPP_OVERLAY_TEXT_FOCUSED, overlayFocusedText.Id(mode, COLOR_RED), overlayBgId);
+        init_pair(Color::OverlayFrame, overlayBorder.Id(mode, COLOR_BLUE), overlayBgId);
+        init_pair(Color::OverlayContent, overlayForeground.Id(mode, -1), overlayBgId);
+        init_pair(Color::OverlayTextInputFrame, overlayFocusedBorder.Id(mode, COLOR_RED), overlayBgId);
+        init_pair(Color::OverlayTextFocused, overlayFocusedText.Id(mode, COLOR_RED), overlayBgId);
 
         /* shortcuts */
         init_pair(
-            CURSESPP_SHORTCUT_ROW_NORMAL,
+            Color::ShortcutRowDefault,
             shortcutsForeground.Id(mode, COLOR_YELLOW),
             shortcutsBackground.Id(mode, -1));
 
         init_pair(
-            CURSESPP_SHORTCUT_ROW_FOCUSED,
+            Color::ShortcutRowFocused,
             focusedShortcutsForeground.Id(mode, COLOR_WHITE),
             focusedShortcutsBackground.Id(mode, COLOR_RED));
 
         /* buttons */
         init_pair(
-            CURSESPP_BUTTON_NORMAL,
+            Color::ButtonDefault,
             buttonForegroundNormal.Id(mode, COLOR_BLACK),
             buttonBackgroundNormal.Id(mode, COLOR_YELLOW));
 
         init_pair(
-            CURSESPP_BUTTON_HIGHLIGHTED,
+            Color::ButtonHighlighted,
             buttonForegroundActive.Id(mode, COLOR_BLACK),
             buttonBackgroundActive.Id(mode, COLOR_GREEN));
 
         /* banner */
         init_pair(
-            CURSESPP_BANNER,
+            Color::Banner,
             bannerForeground.Id(mode, COLOR_BLACK),
             bannerBackground.Id(mode, COLOR_YELLOW));
 
         /* footer */
         init_pair(
-            CURSESPP_FOOTER,
+            Color::Footer,
             footerForeground.Id(mode, COLOR_BLACK),
             footerBackground.Id(mode, COLOR_BLUE));
 
         /* list items */
         init_pair(
-            CURSESPP_LIST_ITEM_HEADER,
+            Color::ListItemHeader,
             listHeaderForeground.Id(mode, COLOR_GREEN),
             listHeaderBackground.Id(mode, -1));
 
         init_pair(
-            CURSESPP_LIST_ITEM_HIGHLIGHTED_HEADER,
+            Color::ListItemHeaderHighlighted,
             listHeaderHighlightedForeground.Id(mode, -1),
             listHeaderHighlightedBackground.Id(mode, COLOR_GREEN));
 
         init_pair(
-            CURSESPP_SELECTED_LIST_ITEM,
+            Color::ListItemSelected,
             listActiveForeground.Id(mode, COLOR_YELLOW),
             listActiveBackground.Id(mode, COLOR_BLACK));
 
         init_pair(
-            CURSESPP_HIGHLIGHTED_LIST_ITEM,
+            Color::ListItemHighlighted,
             listHighlightedForeground.Id(mode, COLOR_BLACK),
             listHighlightedBackground.Id(mode, COLOR_GREEN));
 
         init_pair(
-            CURSESPP_HIGHLIGHTED_SELECTED_LIST_ITEM,
+            Color::ListItemHighlightedSelected,
             listActiveHighlightedForeground.Id(mode, COLOR_BLACK),
             listActiveHighlightedBackground.Id(mode, COLOR_YELLOW));
 
         init_pair(
-            CURSESPP_HIGHLIGHTED_ERROR_LIST_ITEM,
+            Color::ListItemError,
             textError.Id(mode, COLOR_RED),
             listHighlightedBackground.Id(mode, COLOR_GREEN));
     }
 
     /* main */
-    Color background;
-    Color foreground;
-    Color focusedBorder;
+    ColorWrapper background;
+    ColorWrapper foreground;
+    ColorWrapper focusedBorder;
 
     /* text */
-    Color textFocused;
-    Color textActive;
-    Color textDisabled;
-    Color textHidden;
-    Color textWarning;
-    Color textError;
+    ColorWrapper textFocused;
+    ColorWrapper textActive;
+    ColorWrapper textDisabled;
+    ColorWrapper textHidden;
+    ColorWrapper textWarning;
+    ColorWrapper textError;
 
     /* overlay */
-    Color overlayBackground;
-    Color overlayForeground;
-    Color overlayBorder;
-    Color overlayFocusedBorder;
-    Color overlayFocusedText;
+    ColorWrapper overlayBackground;
+    ColorWrapper overlayForeground;
+    ColorWrapper overlayBorder;
+    ColorWrapper overlayFocusedBorder;
+    ColorWrapper overlayFocusedText;
 
     /* shortcut bar */
-    Color shortcutsBackground;
-    Color shortcutsForeground;
-    Color focusedShortcutsBackground;
-    Color focusedShortcutsForeground;
+    ColorWrapper shortcutsBackground;
+    ColorWrapper shortcutsForeground;
+    ColorWrapper focusedShortcutsBackground;
+    ColorWrapper focusedShortcutsForeground;
 
     /* buttons */
-    Color buttonBackgroundNormal;
-    Color buttonForegroundNormal;
-    Color buttonBackgroundActive;
-    Color buttonForegroundActive;
+    ColorWrapper buttonBackgroundNormal;
+    ColorWrapper buttonForegroundNormal;
+    ColorWrapper buttonBackgroundActive;
+    ColorWrapper buttonForegroundActive;
 
     /* banner */
-    Color bannerBackground;
-    Color bannerForeground;
+    ColorWrapper bannerBackground;
+    ColorWrapper bannerForeground;
 
     /* footer */
-    Color footerBackground;
-    Color footerForeground;
+    ColorWrapper footerBackground;
+    ColorWrapper footerForeground;
 
     /* listview */
-    Color listHeaderBackground;
-    Color listHeaderForeground;
-    Color listHeaderHighlightedBackground;
-    Color listHeaderHighlightedForeground;
-    Color listHighlightedBackground;
-    Color listHighlightedForeground;
-    Color listActiveForeground;
-    Color listActiveBackground;
-    Color listActiveHighlightedBackground;
-    Color listActiveHighlightedForeground;
+    ColorWrapper listHeaderBackground;
+    ColorWrapper listHeaderForeground;
+    ColorWrapper listHeaderHighlightedBackground;
+    ColorWrapper listHeaderHighlightedForeground;
+    ColorWrapper listHighlightedBackground;
+    ColorWrapper listHighlightedForeground;
+    ColorWrapper listActiveForeground;
+    ColorWrapper listActiveBackground;
+    ColorWrapper listActiveHighlightedBackground;
+    ColorWrapper listActiveHighlightedForeground;
 };
 
 /* some terminals report custom colors are supported, and also
