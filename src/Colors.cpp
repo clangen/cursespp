@@ -331,6 +331,9 @@ struct Theme {
     /* initializes all of the color pairs from the specified colors, then applies them
     to the current session! */
     void Apply(Colors::Mode mode, Colors::BgType bgType) {
+#ifdef WIN32
+        bgType = Colors::Theme;
+#endif
         int backgroundId = (bgType == Colors::BgType::Theme) ? background.Id(mode, -1) : -1;
         int foregroundId = foreground.Id(mode, -1);
 
