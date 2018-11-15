@@ -268,7 +268,7 @@ struct Theme {
         char* buffer = nullptr;
         int size = 0;
 
-        if (f8n::env::FileToByteArray(fn, &buffer, size)) {
+        if (f8n::env::FileToByteArray(fn, &buffer, size, true)) {
             try {
                 json data = json::parse(buffer);
 
