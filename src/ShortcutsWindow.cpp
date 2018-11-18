@@ -195,8 +195,8 @@ int ShortcutsWindow::getActiveIndex() {
 void ShortcutsWindow::OnRedraw() {
     this->Clear();
 
-    int64_t normalAttrs = Color::ButtonDefault;
-    int64_t activeAttrs = Color::ButtonHighlighted;
+    Color normalAttrs = Color(Color::ButtonDefault);
+    Color activeAttrs = Color(Color::ButtonHighlighted);
 
     WINDOW* c = this->GetContent();
 

@@ -124,6 +124,7 @@ IWindowPtr AppLayout::FocusNext() {
     }
     return cursespp::IWindowPtr();
 }
+
 IWindowPtr AppLayout::FocusPrev() {
     if (this->shortcutsFocused) {
         return this->BlurShortcuts();
