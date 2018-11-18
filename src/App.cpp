@@ -99,6 +99,7 @@ App::App(const std::string& title) {
     this->appTitle = title;
     this->colorMode = Colors::RGB;
     win32::ConfigureDpiAwareness();
+    PDC_set_default_menu_visibility(0);
 #else
     setlocale(LC_ALL, "");
     std::signal(SIGWINCH, resizedHandler);
