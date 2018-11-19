@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "PluginOverlay.h"
+#include <cursespp/PluginOverlay.h>
 
 #include <f8n/environment/Environment.h>
 #include <f8n/plugins/Plugins.h>
@@ -395,27 +395,11 @@ class SchemaAdapter: public ScrollAdapterBase {
 
 static void showConfigureOverlay(IPlugin* plugin, SchemaPtr schema) {
     auto prefs = Preferences::ForPlugin(plugin->Name());
-    std::shared_ptr<SchemaAdapter> schemaAdapter(new SchemaAdapter(prefs, schema));
-    std::shared_ptr<ListOverlay> dialog(new ListOverlay());
-
     std::string title = _TSTR("settings_configure_plugin_title");
     ReplaceAll(title, "{{name}}", plugin->Name());
-
-    dialog->SetAdapter(schemaAdapter)
-        .SetTitle(title)
-        .SetWidthPercent(80)
-        .SetAutoDismiss(false)
-        .SetItemSelectedCallback(
-            [schemaAdapter](ListOverlay* overlay, IScrollAdapterPtr adapter, size_t index) {
-                schemaAdapter->ShowOverlay(index);
-            })
-        .SetDismissedCallback([plugin, schemaAdapter](ListOverlay* overlay) {
-                if (schemaAdapter->Changed()) {
-                    plugin->Reload();
-                }
-            });
-
-    cursespp::App::Overlays().Push(dialog);
+    PluginOverlay::Show(title, prefs, schema, [plugin]() {
+        plugin->Reload();
+    });
 }
 
 static void showNoSchemaDialog(const std::string& name) {
@@ -558,3 +542,33 @@ void PluginOverlay::Show() {
 
     cursespp::App::Overlays().Push(dialog);
 }
+
+
+void PluginOverlay::Show(
+    const std::string& title,
+    PrefsPtr prefs,
+    SchemaPtr schema,
+    std::function<void()> callback)
+{
+    std::shared_ptr<SchemaAdapter> schemaAdapter(new SchemaAdapter(prefs, schema));
+    std::shared_ptr<ListOverlay> dialog(new ListOverlay());
+
+    dialog->SetAdapter(schemaAdapter)
+        .SetTitle(title)
+        .SetWidthPercent(80)
+        .SetAutoDismiss(false)
+        .SetItemSelectedCallback(
+            [schemaAdapter](ListOverlay* overlay, IScrollAdapterPtr adapter, size_t index) {
+                schemaAdapter->ShowOverlay(index);
+            })
+        .SetDismissedCallback([callback, schemaAdapter](ListOverlay* overlay) {
+                if (schemaAdapter->Changed()) {
+                    if (callback) {
+                        callback();
+                    }
+                }
+            });
+
+    cursespp::App::Overlays().Push(dialog);
+}
+

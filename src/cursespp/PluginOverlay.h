@@ -34,10 +34,19 @@
 
 #pragma once
 
+#include <f8n/sdk/ISchema.h>
+#include <f8n/preferences/Preferences.h>
+
 namespace cursespp {
     class PluginOverlay {
         public:
             static void Show();
+
+            static void Show(
+                const std::string& title,
+                std::shared_ptr<f8n::prefs::Preferences> prefs,
+                std::shared_ptr<f8n::sdk::ISchema> schema,
+                std::function<void()> callback);
 
         private:
             PluginOverlay();
