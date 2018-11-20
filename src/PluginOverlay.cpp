@@ -273,7 +273,7 @@ class SchemaAdapter: public ScrollAdapterBase {
             auto stringAdapter = std::make_shared<StringListAdapter>(items);
             std::shared_ptr<ListOverlay> dialog(new ListOverlay());
 
-            size_t width = u8cols(title) + 4; /* extra padding for border and spacing */
+            size_t width = std::max(16UL, u8cols(title) + 4); /* extra padding for border and spacing */
             size_t index = 0;
 
             for (size_t i = 0; i < items.size(); i++) {
