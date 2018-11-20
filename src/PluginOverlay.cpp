@@ -82,6 +82,7 @@ using SchemaPtr = std::shared_ptr<ISchema>;
 #define DEFAULT(type) reinterpret_cast<const ISchema::type*>(entry)->defaultValue
 
 static size_t DEFAULT_INPUT_WIDTH = 26;
+static size_t MINIMUM_OVERLAY_WIDTH = 16;
 
 static std::string stringValueForDouble(const double value, const int precision = 2) {
     std::ostringstream out;
@@ -273,7 +274,7 @@ class SchemaAdapter: public ScrollAdapterBase {
             auto stringAdapter = std::make_shared<StringListAdapter>(items);
             std::shared_ptr<ListOverlay> dialog(new ListOverlay());
 
-            size_t width = std::max(16UL, u8cols(title) + 4); /* extra padding for border and spacing */
+            size_t width = std::max(u8cols(title) + 4, MINIMUM_OVERLAY_WIDTH); /* extra padding for border and spacing */
             size_t index = 0;
 
             for (size_t i = 0; i < items.size(); i++) {

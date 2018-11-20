@@ -126,6 +126,9 @@
     <ClInclude Include="cursespp\AppLayout.h">
       <Filter>src\include</Filter>
     </ClInclude>
+    <ClInclude Include="cursespp\PluginOverlay.h">
+      <Filter>src\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LayoutBase.cpp">
@@ -201,6 +204,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="AppLayout.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginOverlay.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
