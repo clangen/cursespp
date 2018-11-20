@@ -398,8 +398,10 @@ static void showConfigureOverlay(IPlugin* plugin, SchemaPtr schema) {
     auto prefs = Preferences::ForPlugin(plugin->Name());
     std::string title = _TSTR("settings_configure_plugin_title");
     ReplaceAll(title, "{{name}}", plugin->Name());
-    PluginOverlay::Show(title, prefs, schema, [plugin]() {
-        plugin->Reload();
+    PluginOverlay::Show(title, prefs, schema, [plugin](bool changed) {
+        if (changed) {
+            plugin->Reload();
+        }
     });
 }
 
@@ -549,7 +551,7 @@ void PluginOverlay::Show(
     const std::string& title,
     PrefsPtr prefs,
     SchemaPtr schema,
-    std::function<void()> callback)
+    std::function<void(bool)> callback)
 {
     std::shared_ptr<SchemaAdapter> schemaAdapter(new SchemaAdapter(prefs, schema));
     std::shared_ptr<ListOverlay> dialog(new ListOverlay());
@@ -563,10 +565,8 @@ void PluginOverlay::Show(
                 schemaAdapter->ShowOverlay(index);
             })
         .SetDismissedCallback([callback, schemaAdapter](ListOverlay* overlay) {
-                if (schemaAdapter->Changed()) {
-                    if (callback) {
-                        callback();
-                    }
+                if (callback) {
+                    callback(schemaAdapter->Changed());
                 }
             });
 

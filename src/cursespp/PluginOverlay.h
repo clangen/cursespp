@@ -46,7 +46,7 @@ namespace cursespp {
                 const std::string& title,
                 std::shared_ptr<f8n::prefs::Preferences> prefs,
                 std::shared_ptr<f8n::sdk::ISchema> schema,
-                std::function<void()> callback);
+                std::function<void(bool)> callback);
 
         private:
             PluginOverlay();
