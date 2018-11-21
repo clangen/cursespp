@@ -45,6 +45,7 @@
 #include <cursespp/DialogOverlay.h>
 #include <cursespp/InputOverlay.h>
 #include <cursespp/ListOverlay.h>
+#include <cursespp/Screen.h>
 #include <cursespp/ScrollAdapterBase.h>
 #include <cursespp/SingleLineEntry.h>
 #include <cursespp/Text.h>
@@ -83,6 +84,10 @@ using SchemaPtr = std::shared_ptr<ISchema>;
 
 static size_t DEFAULT_INPUT_WIDTH = 26;
 static size_t MINIMUM_OVERLAY_WIDTH = 16;
+
+static int overlayWidth() {
+    return (int)(0.8f * (float) Screen::GetWidth());
+}
 
 static std::string stringValueForDouble(const double value, const int precision = 2) {
     std::ostringstream out;
@@ -274,20 +279,17 @@ class SchemaAdapter: public ScrollAdapterBase {
             auto stringAdapter = std::make_shared<StringListAdapter>(items);
             std::shared_ptr<ListOverlay> dialog(new ListOverlay());
 
-            size_t width = std::max(u8cols(title) + 4, MINIMUM_OVERLAY_WIDTH); /* extra padding for border and spacing */
             size_t index = 0;
-
             for (size_t i = 0; i < items.size(); i++) {
                 auto current = items[i];
                 if (current == defaultValue) {
                     index = i;
                 }
-                width = std::max(width, u8cols(current));
             }
 
             dialog->SetAdapter(stringAdapter)
                 .SetTitle(title)
-                .SetWidth(width)
+                .SetWidth(overlayWidth())
                 .SetSelectedIndex(index)
                 .SetAutoDismiss(true)
                 .SetItemSelectedCallback(
@@ -319,16 +321,14 @@ class SchemaAdapter: public ScrollAdapterBase {
             auto validator = std::make_shared<NumberValidator<int>>(
                 entry->minValue,  entry->maxValue, INT_FORMATTER);
 
-            auto width = std::max(u8cols(title), DEFAULT_INPUT_WIDTH);
-
             std::shared_ptr<InputOverlay> dialog(new InputOverlay());
 
             dialog->SetTitle(title)
                 .SetText(stringValueFor(prefs, entry))
                 .SetValidator(validator)
-                .SetWidth(width)
+                .SetWidth(overlayWidth())
                 .SetInputAcceptedCallback([this, name](const std::string& value) {
-                    this->prefs->SetInt(name, std::stoi(value));
+                    this->prefs->SetInt(name, (int) std::stod(value));
                     this->changed = true;
                 });
 
@@ -346,14 +346,12 @@ class SchemaAdapter: public ScrollAdapterBase {
             auto validator = std::make_shared<NumberValidator<double>>(
                 entry->minValue, entry->maxValue, formatter);
 
-            auto width = std::max(u8cols(title) + 4, DEFAULT_INPUT_WIDTH);
-
             std::shared_ptr<InputOverlay> dialog(new InputOverlay());
 
             dialog->SetTitle(title)
                 .SetText(stringValueFor(prefs, entry))
                 .SetValidator(validator)
-                .SetWidth(width)
+                .SetWidth(overlayWidth())
                 .SetInputAcceptedCallback([this, name](const std::string& value) {
                     this->prefs->SetDouble(name, std::stod(value));
                     this->changed = true;
@@ -367,6 +365,7 @@ class SchemaAdapter: public ScrollAdapterBase {
             std::shared_ptr<InputOverlay> dialog(new InputOverlay());
             dialog->SetTitle(name)
                 .SetText(stringValueFor(prefs, entry))
+                .SetWidth(overlayWidth())
                 .SetInputAcceptedCallback([this, name](const std::string& value) {
                     this->prefs->SetString(name, value.c_str());
                     this->changed = true;
