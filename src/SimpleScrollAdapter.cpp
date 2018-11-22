@@ -77,10 +77,9 @@ EntryPtr SimpleScrollAdapter::GetEntry(cursespp::ScrollableWindow* window, size_
     if (window && selectable) {
         SingleLineEntry* single = dynamic_cast<SingleLineEntry*>(entry.get());
         if (single) {
-            single->SetAttrs(Color::Default);
-
+            single->SetAttrs(Color(Color::Default));
             if (index == window->GetScrollPosition().logicalIndex) {
-                single->SetAttrs(Color::ListItemHighlighted);
+                single->SetAttrs(Color(Color::ListItemHighlighted));
             }
         }
     }
