@@ -56,11 +56,16 @@ namespace cursespp {
         sigslot::signal1<TextLabel*> Activated;
 
         TextLabel();
+        TextLabel(const std::string& value);
+        TextLabel(const std::string& value, const text::TextAlign alignment);
+
         virtual ~TextLabel();
 
         virtual void SetText(
             const std::string& value,
-            const text::TextAlign alignment = text::AlignLeft);
+            const text::TextAlign alignment);
+
+        virtual void SetText(const std::string& value);
 
         virtual std::string GetText() { return this->buffer; }
         virtual size_t Length() { return f8n::utf::u8cols(this->buffer); }
@@ -72,6 +77,8 @@ namespace cursespp {
         virtual bool MouseEvent(const IMouseHandler::Event& event);
 
     private:
+        void ApplyDefaultStyle();
+
         std::string buffer;
         text::TextAlign alignment;
         bool bold;

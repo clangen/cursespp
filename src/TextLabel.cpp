@@ -44,13 +44,31 @@ using namespace cursespp;
 TextLabel::TextLabel()
 : Window()
 , alignment(text::AlignLeft) {
+    this->ApplyDefaultStyle();
+}
+
+TextLabel::TextLabel(const std::string& value)
+: Window()
+, alignment(text::AlignLeft) {
+    this->ApplyDefaultStyle();
+    this->SetText(value);
+}
+
+TextLabel::TextLabel(const std::string& value, const text::TextAlign alignment)
+: Window()
+, alignment(alignment) {
+    this->ApplyDefaultStyle();
+    this->SetText(value, alignment);
+}
+
+TextLabel::~TextLabel() {
+}
+
+void TextLabel::ApplyDefaultStyle() {
     this->SetFrameVisible(false);
     this->SetContentColor(Color::Default);
     this->SetFocusedContentColor(Color::TextFocused);
     this->bold = false;
-}
-
-TextLabel::~TextLabel() {
 }
 
 void TextLabel::OnRedraw() {
@@ -71,6 +89,10 @@ void TextLabel::SetText(const std::string& value, const text::TextAlign alignmen
         this->alignment = alignment;
         this->Redraw();
     }
+}
+
+void TextLabel::SetText(const std::string& value) {
+    this->SetText(value, this->alignment);
 }
 
 void TextLabel::SetBold(bool bold) {

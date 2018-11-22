@@ -37,12 +37,18 @@
 #include <cursespp/IOverlay.h>
 #include <cursespp/LayoutBase.h>
 #include <cursespp/OverlayStack.h>
+#include <cursespp/TextLabel.h>
+#include <cursespp/TextInput.h>
+#include <cursespp/Checkbox.h>
+#include <cursespp/Colors.h>
 
 namespace cursespp {
     class OverlayBase : public LayoutBase, public IOverlay {
         public:
             OverlayBase() : LayoutBase() {
-
+                this->SetFrameVisible(true);
+                this->SetFrameColor(Color::OverlayFrame);
+                this->SetContentColor(Color::OverlayContent);
             }
 
             virtual ~OverlayBase() {
@@ -68,6 +74,29 @@ namespace cursespp {
             }
 
         protected:
+            static void style(TextLabel& label) {
+                label.SetContentColor(Color::OverlayContent);
+                label.SetFocusedContentColor(Color::OverlayTextFocused);
+            }
+
+            static void style(Checkbox& cb) {
+                cb.SetContentColor(Color::OverlayContent);
+                cb.SetFocusedContentColor(Color::OverlayTextFocused);
+            }
+
+            static void style(TextInput& input) {
+                if (input.GetStyle() == TextInput::StyleBox) {
+                    input.SetFrameColor(Color::OverlayFrame);
+                    input.SetContentColor(Color::OverlayContent);
+                    input.SetFocusedFrameColor(Color::OverlayTextInputFrame);
+                    input.SetFocusedContentColor(Color::OverlayContent);
+                }
+                else {
+                    input.SetContentColor(Color::OverlayContent);
+                    input.SetFocusedContentColor(Color::OverlayTextFocused);
+                }
+            }
+
             OverlayStack* GetOverlayStack() {
                 return this->stack;
             }
