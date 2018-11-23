@@ -38,11 +38,46 @@
 #include <f8n/preferences/Preferences.h>
 
 namespace cursespp {
-    class PluginOverlay {
+    class SchemaOverlay {
         public:
-            static void Show();
+            static void Show(
+                const std::string& title,
+                std::shared_ptr<f8n::prefs::Preferences> prefs,
+                std::shared_ptr<f8n::sdk::ISchema> schema,
+                std::function<void(bool)> callback);
+
+            static void ShowListOverlay(
+                const std::string& title,
+                std::vector<std::string>& items,
+                const std::string defaultValue,
+                std::function<void(std::string)> cb);
+
+            static void ShowBoolOverlay(
+                const f8n::sdk::ISchema::BoolEntry* entry,
+                std::shared_ptr<f8n::prefs::Preferences> prefs,
+                std::function<void(std::string)> callback);
+
+            static void ShowIntOverlay(
+                const f8n::sdk::ISchema::IntEntry* entry,
+                std::shared_ptr<f8n::prefs::Preferences> prefs,
+                std::function<void(std::string)> callback);
+
+            static void ShowDoubleOverlay(
+                const f8n::sdk::ISchema::DoubleEntry* entry,
+                std::shared_ptr<f8n::prefs::Preferences> prefs,
+                std::function<void(std::string)> callback);
+
+            static void ShowStringOverlay(
+                const f8n::sdk::ISchema::StringEntry* entry,
+                std::shared_ptr<f8n::prefs::Preferences> prefs,
+                std::function<void(std::string)> callback);
+
+            static void ShowEnumOverlay(
+                const f8n::sdk::ISchema::EnumEntry* entry,
+                std::shared_ptr<f8n::prefs::Preferences> prefs,
+                std::function<void(std::string)> callback);
 
         private:
-            PluginOverlay();
+            SchemaOverlay();
     };
 }

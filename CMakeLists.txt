@@ -50,6 +50,7 @@ set (CURSESPP_SRCS
   ./src/MultiLineEntry.cpp
   ./src/OverlayStack.cpp
   ./src/PluginOverlay.cpp
+  ./src/SchemaOverlay.cpp
   ./src/Screen.cpp
   ./src/Scrollbar.cpp
   ./src/ScrollAdapterBase.cpp
