@@ -38,6 +38,7 @@
     <ClInclude Include="cursespp\OverlayBase.h" />
     <ClInclude Include="cursespp\OverlayStack.h" />
     <ClInclude Include="cursespp\PluginOverlay.h" />
+    <ClInclude Include="cursespp\SchemaOverlay.h" />
     <ClInclude Include="cursespp\Screen.h" />
     <ClInclude Include="cursespp\ScrollableWindow.h" />
     <ClInclude Include="cursespp\ScrollAdapterBase.h" />
@@ -66,6 +67,7 @@
     <ClCompile Include="MultiLineEntry.cpp" />
     <ClCompile Include="OverlayStack.cpp" />
     <ClCompile Include="PluginOverlay.cpp" />
+    <ClCompile Include="SchemaOverlay.cpp" />
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="ScrollableWindow.cpp" />
     <ClCompile Include="ScrollAdapterBase.cpp" />
