@@ -76,6 +76,16 @@ static inline void DrawCursor(IInput* input) {
     }
 }
 
+static inline void DrawTooSmall() {
+    static const std::string error = "terminal too small";
+    int64_t color = Color(Color::TextError);
+    wclear(stdscr);
+    wmove(stdscr, 0, 0);
+    wattron(stdscr, color);
+    waddstr(stdscr, error.c_str());
+    wattroff(stdscr, color);
+}
+
 bool Window::WriteToScreen(IInput* input) {
     if (drawPending && !freeze) {
         drawPending = false;
@@ -83,6 +93,10 @@ bool Window::WriteToScreen(IInput* input) {
         doupdate();
         DrawCursor(input);
         return true;
+    }
+    else if (freeze) {
+        drawPending = false;
+        DrawTooSmall();
     }
 
     return false;
