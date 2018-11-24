@@ -63,9 +63,6 @@ AppLayout::AppLayout(cursespp::App& app)
 , topLevelLayout(nullptr)
 , LayoutBase() {
     this->Initialize();
-
-    //this->SetMainLayout(paths.size() > 0 ? libraryLayout : settingsLayout);
-
     this->EnableDemoModeIfNecessary();
 }
 
@@ -73,7 +70,8 @@ AppLayout::~AppLayout() {
 }
 
 void AppLayout::OnLayout() {
-    size_t cx = Screen::GetWidth(), cy = Screen::GetHeight();
+    size_t cx = Screen::GetWidth() - (paddingL + paddingR);
+    size_t cy = Screen::GetHeight() - (paddingT + paddingB);
 
 #if ENABLE_DEMO_MODE
     this->hotkey->MoveAndResize(0, cy - 1, cx, 1);
@@ -81,7 +79,7 @@ void AppLayout::OnLayout() {
 #endif
 
     if (this->layout) {
-        this->layout->MoveAndResize(0, 0, cx, cy - 1);
+        this->layout->MoveAndResize(paddingL, paddingT, cx, cy - 1);
         this->layout->Show();
         this->layout->BringToTop();
 
@@ -90,7 +88,9 @@ void AppLayout::OnLayout() {
         }
     }
 
-    this->shortcuts->MoveAndResize(0, cy - 1, cx, 1);
+    this->shortcuts->MoveAndResize(
+        0, Screen::GetHeight() - 1,
+        Screen::GetWidth(), 1);
 }
 
 void AppLayout::Initialize() {
@@ -103,6 +103,14 @@ void AppLayout::Initialize() {
     this->hotkey->SetText("keypress: <none>", text::AlignCenter);
     this->AddWindow(this->hotkey);
 #endif
+}
+
+void AppLayout::SetPadding(size_t t, size_t l, size_t b, size_t r) {
+    this->paddingT = t;
+    this->paddingL = l;
+    this->paddingB = b;
+    this->paddingR = r;
+    this->Layout();
 }
 
 cursespp::IWindowPtr AppLayout::GetFocus() {
