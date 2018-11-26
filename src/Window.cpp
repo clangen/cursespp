@@ -103,7 +103,7 @@ bool Window::WriteToScreen(IInput* input) {
 }
 
 void Window::InvalidateScreen() {
-    wclear(stdscr);
+    werase(stdscr);
     drawPending = true;
 }
 
@@ -449,13 +449,13 @@ void Window::RepaintBackground() {
         this->frame &&
         this->content != this->frame)
     {
-        wclear(this->frame);
+        werase(this->frame);
         wbkgd(this->frame, focused? this->focusedFrameColor : this->frameColor);
         this->DrawFrameAndTitle();
     }
 
     if (this->content) {
-        wclear(this->content);
+        werase(this->content);
         wbkgd(this->content, focused ? this->focusedContentColor : this->contentColor);
     }
 
