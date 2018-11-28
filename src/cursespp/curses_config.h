@@ -39,16 +39,18 @@
 #define PDC_FORCE_UTF8
 #endif
 
+#include <f8n/config.h>
+
+#ifdef WIN32
+#undef MOUSE_MOVED
+#endif
+
 #if defined(WIN32) || defined(__APPLE__) || defined(NO_NCURSESW)
     #include <curses.h>
     #include <panel.h>
 #else
     #include <ncursesw/curses.h>
     #include <ncursesw/panel.h>
-#endif
-
-#ifdef WIN32
-#undef MOUSE_MOVED
 #endif
 
 #include <stdarg.h>
