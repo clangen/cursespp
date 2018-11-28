@@ -35,7 +35,7 @@
 #ifdef WIN32
 
 #include <cursespp/Win32Util.h>
-#include <f8n/utf/conv.h>
+#include <f8n/str/utf.h>
 #include <Windows.h>
 #include <Commctrl.h>
 #include <shellapi.h>

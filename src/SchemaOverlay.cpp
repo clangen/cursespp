@@ -3,13 +3,14 @@
 #include <f8n/environment/Environment.h>
 #include <f8n/sdk/ISchema.h>
 #include <f8n/i18n/Locale.h>
-#include <f8n/utf/conv.h>
+#include <f8n/str/utf.h>
 
 #include <cursespp/App.h>
 #include <cursespp/Colors.h>
 #include <cursespp/DialogOverlay.h>
 #include <cursespp/InputOverlay.h>
 #include <cursespp/ListOverlay.h>
+#include <cursespp/NumberValidator.h>
 #include <cursespp/Screen.h>
 #include <cursespp/ScrollAdapterBase.h>
 #include <cursespp/SingleLineEntry.h>
@@ -53,20 +54,13 @@ static std::function<std::string(double)> doubleFormatter(int precision) {
 }
 
 template <typename T>
-bool bounded(T minimum, T maximum) {
-    return
-        minimum != std::numeric_limits<T>::min() &&
-        maximum != std::numeric_limits<T>::max();
-}
-
-template <typename T>
 std::string numberInputTitle(
     std::string keyName,
     T minimum,
     T maximum,
     std::function<std::string(T)> formatter)
 {
-    if (bounded(minimum, maximum)) {
+    if (NumberValidator<T>::bounded(minimum, maximum)) {
         return keyName + " (" + formatter(minimum)
             + " - " + formatter(maximum) + ")";
     }
@@ -107,41 +101,6 @@ static std::string stringValueFor(PrefsPtr prefs, const T* entry) {
 static std::string stringValueFor(PrefsPtr prefs, const ISchema::Entry* entry) {
     return stringValueFor(prefs, entry, entry->type, entry->name);
 }
-
-template <typename T>
-struct NumberValidator : public InputOverlay::IValidator {
-    using Formatter = std::function<std::string(T)>;
-
-    NumberValidator(T minimum, T maximum, Formatter formatter)
-        : minimum(minimum), maximum(maximum), formatter(formatter) {
-    }
-
-    virtual bool IsValid(const std::string& input) const override {
-        try {
-            double result = std::stod(input);
-            if (bounded(minimum, maximum) && (result < minimum || result > maximum)) {
-                return false;
-            }
-        }
-        catch (std::invalid_argument) {
-            return false;
-        }
-        return true;
-    }
-
-    virtual const std::string ErrorMessage() const override {
-        if (bounded(minimum, maximum)) {
-            std::string result = _TSTR("validator_dialog_number_parse_bounded_error");
-            ReplaceAll(result, "{{minimum}}", formatter(minimum));
-            ReplaceAll(result, "{{maximum}}", formatter(maximum));
-            return result;
-        }
-        return _TSTR("validator_dialog_number_parse_error");
-    }
-
-    Formatter formatter;
-    T minimum, maximum;
-};
 
 class StringListAdapter : public ScrollAdapterBase {
     public:

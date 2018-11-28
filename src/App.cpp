@@ -40,7 +40,7 @@
 #include <cursespp/Window.h>
 #include <cursespp/Text.h>
 #include <cursespp/Screen.h>
-#include <f8n/utf/conv.h>
+#include <f8n/str/utf.h>
 #include <algorithm>
 #include <thread>
 

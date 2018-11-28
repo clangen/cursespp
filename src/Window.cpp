@@ -40,7 +40,7 @@
 #include <cursespp/Screen.h>
 #include <cursespp/Text.h>
 
-#include <f8n/utf/conv.h>
+#include <f8n/str/utf.h>
 #include <f8n/runtime/Message.h>
 #include <f8n/runtime/MessageQueue.h>
 

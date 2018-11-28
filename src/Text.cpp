@@ -34,7 +34,7 @@
 
 #include <cursespp/curses_config.h>
 #include <cursespp/Text.h>
-#include <f8n/utf/conv.h>
+#include <f8n/str/utf.h>
 #include <math.h>
 #include <unordered_map>
 #include <algorithm>

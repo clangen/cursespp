@@ -38,7 +38,8 @@
 #include <f8n/plugins/Plugins.h>
 #include <f8n/sdk/ISchema.h>
 #include <f8n/i18n/Locale.h>
-#include <f8n/utf/conv.h>
+#include <f8n/str/utf.h>
+#include <f8n/str/util.h>
 
 #include <cursespp/App.h>
 #include <cursespp/Colors.h>
@@ -58,12 +59,12 @@
 #include <iomanip>
 #include <limits>
 
+using namespace f8n;
 using namespace f8n::sdk;
 using namespace f8n::prefs;
 using namespace f8n::plugin;
 using namespace f8n::i18n;
 using namespace f8n::utf;
-using namespace f8n::env;
 using namespace cursespp;
 
 static const std::string unchecked = "[ ]";
@@ -91,7 +92,7 @@ static int overlayWidth() {
 static void showConfigureOverlay(IPlugin* plugin, SchemaPtr schema) {
     auto prefs = Preferences::ForPlugin(plugin->Name());
     std::string title = _TSTR("settings_configure_plugin_title");
-    ReplaceAll(title, "{{name}}", plugin->Name());
+    str::replace(title, "{{name}}", plugin->Name());
     SchemaOverlay::Show(title, prefs, schema, [plugin](bool changed) {
         if (changed) {
             plugin->Reload();
@@ -103,7 +104,7 @@ static void showNoSchemaDialog(const std::string& name) {
     std::shared_ptr<DialogOverlay> dialog(new DialogOverlay());
 
     std::string message = _TSTR("settings_no_plugin_config_message");
-    ReplaceAll(message, "{{name}}", name);
+    str::replace(message, "{{name}}", name);
 
     (*dialog)
         .SetTitle(_TSTR("settings_no_plugin_config_title"))

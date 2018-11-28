@@ -37,7 +37,7 @@
 #include <cursespp/Colors.h>
 #include <cursespp/Screen.h>
 #include <cursespp/Text.h>
-#include <f8n/utf/conv.h>
+#include <f8n/str/utf.h>
 
 static const int TOAST_MESSAGE_HIDE = 1000;
 

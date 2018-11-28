@@ -34,53 +34,51 @@
 
 #pragma once
 
-#include <cursespp/curses_config.h>
-#include <cursespp/Window.h>
-#include <cursespp/IInput.h>
-#include <cursespp/IKeyHandler.h>
-#include <cursespp/Text.h>
-#include <f8n/str/utf.h>
-#include <sigslot/sigslot.h>
+#include <f8n/str/util.h>
+#include <cursespp/InputOverlay.h>
 
 namespace cursespp {
-    class TextLabel :
-#if (__clang_major__ == 7 && __clang_minor__ == 3)
-        public cursespp::Window,
-        public cursespp::IKeyHandler,
-        public std::enable_shared_from_this<TextLabel> {
-#else
-        public cursespp::Window,
-        public cursespp::IKeyHandler {
-#endif
-    public:
-        sigslot::signal1<TextLabel*> Activated;
 
-        TextLabel();
-        TextLabel(const std::string& value);
-        TextLabel(const std::string& value, const text::TextAlign alignment);
+    template <typename T>
+    struct NumberValidator : public InputOverlay::IValidator {
+        using Formatter = std::function<std::string(T)>;
 
-        virtual ~TextLabel();
+        NumberValidator(T minimum, T maximum, Formatter formatter)
+            : minimum(minimum), maximum(maximum), formatter(formatter) {
+        }
 
-        virtual void SetText(
-            const std::string& value,
-            const text::TextAlign alignment);
+        virtual bool IsValid(const std::string& input) const override {
+            try {
+                double result = std::stod(input);
+                if (bounded(minimum, maximum) && (result < minimum || result > maximum)) {
+                    return false;
+                }
+            }
+            catch (std::invalid_argument) {
+                return false;
+            }
+            return true;
+        }
 
-        virtual void SetText(const std::string& value);
+        virtual const std::string ErrorMessage() const override {
+            if (bounded(minimum, maximum)) {
+                std::string result = _TSTR("validator_dialog_number_parse_bounded_error");
+                f8n::str::replace(result, "{{minimum}}", formatter(minimum));
+                f8n::str::replace(result, "{{maximum}}", formatter(maximum));
+                return result;
+            }
+            return _TSTR("validator_dialog_number_parse_error");
+        }
 
-        virtual std::string GetText() { return this->buffer; }
-        virtual size_t Length() { return f8n::utf::u8cols(this->buffer); }
-        virtual void SetBold(bool bold);
-        virtual bool IsBold() { return this->bold; }
-        virtual void OnRedraw();
+        static bool bounded(T minimum, T maximum) {
+            return
+                minimum != std::numeric_limits<T>::min() &&
+                maximum != std::numeric_limits<T>::max();
+        }
 
-        virtual bool KeyPress(const std::string& key);
-        virtual bool MouseEvent(const IMouseHandler::Event& event);
 
-    private:
-        void ApplyDefaultStyle();
-
-        std::string buffer;
-        text::TextAlign alignment;
-        bool bold;
+        Formatter formatter;
+        T minimum, maximum;
     };
+
 }

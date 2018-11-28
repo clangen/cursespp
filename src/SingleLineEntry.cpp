@@ -33,7 +33,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <cursespp/SingleLineEntry.h>
-#include <f8n/utf/conv.h>
+#include <f8n/str/utf.h>
 
 using namespace cursespp;
 using namespace f8n::utf;
