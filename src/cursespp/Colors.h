@@ -36,6 +36,7 @@
 
 #include <cursespp/curses_config.h>
 #include <string>
+#include <vector>
 
 namespace cursespp {
     class Color {
@@ -114,6 +115,7 @@ namespace cursespp {
             };
 
             static void Init(Mode mode = Mode::Basic, BgType bgType = BgType::Theme);
-            static void SetTheme(const std::string& fn);
+            static void SetTheme(const std::string& name);
+            static std::vector<std::string> ListThemes();
     };
 }

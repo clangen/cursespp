@@ -59,7 +59,7 @@ namespace cursespp {
             void SetResizeHandler(ResizeHandler handler);
             void SetColorMode(Colors::Mode mode);
             void SetColorBackgroundType(Colors::BgType bgType);
-            void SetColorTheme(const std::string& fn);
+            void SetColorTheme(const std::string& name);
             void SetMinimumSize(int width, int height);
             void SetMouseEnabled(bool enabled);
             bool IsOverlayVisible() { return this->state.overlay != nullptr; }

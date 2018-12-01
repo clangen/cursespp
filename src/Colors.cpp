@@ -35,9 +35,11 @@
 #include <json.hpp>
 #include <cursespp/Colors.h>
 #include <f8n/environment/Environment.h>
+#include <boost/filesystem.hpp>
 
 using namespace cursespp;
 using namespace nlohmann;
+using namespace boost::filesystem;
 
 /* if the terminal supports custom colors, these are the palette
 indicies we'll use to store them */
@@ -138,71 +140,73 @@ palette, use ones that most closely match our desired colors */
 
 #define SCALE(x) ((x * 1000) / 255)
 
-struct Theme {
-    struct ColorWrapper {
-        ColorWrapper() {
-            Set(0, 0, 0, 0, -1);
-        }
+struct ThemeColor {
+    ThemeColor() {
+        Set(0, 0, 0, 0, -1);
+    }
 
-        void Set(int colorId, int r, int g, int b, int palette) {
-            this->colorId = colorId;
-            this->r = r;
-            this->g = g;
-            this->b = b;
-            this->palette = palette;
-        }
+    void Set(int colorId, int r, int g, int b, int palette) {
+        this->colorId = colorId;
+        this->r = r;
+        this->g = g;
+        this->b = b;
+        this->palette = palette;
+    }
 
-        void Set(const json& obj) {
-            if (!obj.is_null()) {
-                std::string hex = obj.value(JSON_KEY_HEX, "");
-                long palette = obj.value(JSON_KEY_PALETTE, -1);
+    void Set(const json& obj) {
+        if (!obj.is_null()) {
+            std::string hex = obj.value(JSON_KEY_HEX, "");
+            long palette = obj.value(JSON_KEY_PALETTE, -1);
 
-                if (hex.length() == 7 && hex[0] == '#') {
-                    int rgb = strtol(hex.substr(1).c_str(), 0, 16);
-                    this->b = rgb & 0x0000ff;
-                    this->r = rgb >> 16;
-                    this->g = (rgb >> 8) & 0x0000ff;
-                }
-                else if (palette > 15 && palette < 256) {
-                    /* we may have already been initialized with a default
-                    color. but if we have a palette color, clear the RGB
-                    values and prefer the value from the theme. */
-                    this->r = this->b = this->g = -1;
-                }
+            if (hex.length() == 7 && hex[0] == '#') {
+                int rgb = strtol(hex.substr(1).c_str(), 0, 16);
+                this->b = rgb & 0x0000ff;
+                this->r = rgb >> 16;
+                this->g = (rgb >> 8) & 0x0000ff;
+            }
+            else if (palette > 15 && palette < 256) {
+                /* we may have already been initialized with a default
+                color. but if we have a palette color, clear the RGB
+                values and prefer the value from the theme. */
+                this->r = this->b = this->g = -1;
+            }
 
-                if (palette != -1) {
-                    this->palette = palette;
-                }
+            if (palette != -1) {
+                this->palette = palette;
             }
         }
+    }
 
-        int Id(Colors::Mode mode, int defaultValue) {
-            if (mode == Colors::Basic) {
-                return defaultValue;
-            }
-            else if (mode == Colors::Palette) {
-                return this->palette;
+    int Id(Colors::Mode mode, int defaultValue) {
+        if (mode == Colors::Basic) {
+            return defaultValue;
+        }
+        else if (mode == Colors::Palette) {
+            return this->palette;
+        }
+        else {
+            if (this->colorId > 15 && this->r >= 0 && this->g >= 0 && this->b >= 0) {
+                init_color(this->colorId, SCALE(this->r), SCALE(this->g), SCALE(this->b));
+                return this->colorId;
             }
             else {
-                if (this->colorId > 15 && this->r >= 0 && this->g >= 0 && this->b >= 0) {
-                    init_color(this->colorId, SCALE(this->r), SCALE(this->g), SCALE(this->b));
-                    return this->colorId;
-                }
-                else {
-                    /* if RGB mode was requested but no RGB value exists, fall back to the
-                    palette value. */
-                    return this->palette;
-                }
+                /* if RGB mode was requested but no RGB value exists, fall back to the
+                palette value. */
+                return this->palette;
             }
-            return -1;
         }
+        return -1;
+    }
 
-        int colorId;
-        int r, g, b;
-        int palette;
-    };
+    int colorId;
+    int r, g, b;
+    int palette;
+};
 
+struct Theme {
     Theme() {
+        this->name = "default";
+        this->Reset();
     }
 
     void Reset() {
@@ -317,6 +321,9 @@ struct Theme {
                     this->listActiveHighlightedBackground.Set(colors.value(JSON_KEY_COLOR_LIST_ITEM_ACTIVE_HIGHLIGHTED_BACKGROUND, unset));
                     this->listActiveHighlightedForeground.Set(colors.value(JSON_KEY_COLOR_LIST_ITEM_ACTIVE_HIGHLIGHTED_FOREGROUND, unset));
 
+                    this->fn = fn;
+                    this->name = data.value("name", "unnamed");
+
                     success = true;
                 }
             }
@@ -424,57 +431,60 @@ struct Theme {
             listHighlightedBackground.Id(mode, COLOR_GREEN));
     }
 
+    std::string name;
+    std::string fn;
+
     /* main */
-    ColorWrapper background;
-    ColorWrapper foreground;
-    ColorWrapper focusedBorder;
+    ThemeColor background;
+    ThemeColor foreground;
+    ThemeColor focusedBorder;
 
     /* text */
-    ColorWrapper textFocused;
-    ColorWrapper textActive;
-    ColorWrapper textDisabled;
-    ColorWrapper textHidden;
-    ColorWrapper textWarning;
-    ColorWrapper textError;
+    ThemeColor textFocused;
+    ThemeColor textActive;
+    ThemeColor textDisabled;
+    ThemeColor textHidden;
+    ThemeColor textWarning;
+    ThemeColor textError;
 
     /* overlay */
-    ColorWrapper overlayBackground;
-    ColorWrapper overlayForeground;
-    ColorWrapper overlayBorder;
-    ColorWrapper overlayFocusedBorder;
-    ColorWrapper overlayFocusedText;
+    ThemeColor overlayBackground;
+    ThemeColor overlayForeground;
+    ThemeColor overlayBorder;
+    ThemeColor overlayFocusedBorder;
+    ThemeColor overlayFocusedText;
 
     /* shortcut bar */
-    ColorWrapper shortcutsBackground;
-    ColorWrapper shortcutsForeground;
-    ColorWrapper focusedShortcutsBackground;
-    ColorWrapper focusedShortcutsForeground;
+    ThemeColor shortcutsBackground;
+    ThemeColor shortcutsForeground;
+    ThemeColor focusedShortcutsBackground;
+    ThemeColor focusedShortcutsForeground;
 
     /* buttons */
-    ColorWrapper buttonBackgroundNormal;
-    ColorWrapper buttonForegroundNormal;
-    ColorWrapper buttonBackgroundActive;
-    ColorWrapper buttonForegroundActive;
+    ThemeColor buttonBackgroundNormal;
+    ThemeColor buttonForegroundNormal;
+    ThemeColor buttonBackgroundActive;
+    ThemeColor buttonForegroundActive;
 
     /* banner */
-    ColorWrapper bannerBackground;
-    ColorWrapper bannerForeground;
+    ThemeColor bannerBackground;
+    ThemeColor bannerForeground;
 
     /* footer */
-    ColorWrapper footerBackground;
-    ColorWrapper footerForeground;
+    ThemeColor footerBackground;
+    ThemeColor footerForeground;
 
     /* listview */
-    ColorWrapper listHeaderBackground;
-    ColorWrapper listHeaderForeground;
-    ColorWrapper listHeaderHighlightedBackground;
-    ColorWrapper listHeaderHighlightedForeground;
-    ColorWrapper listHighlightedBackground;
-    ColorWrapper listHighlightedForeground;
-    ColorWrapper listActiveForeground;
-    ColorWrapper listActiveBackground;
-    ColorWrapper listActiveHighlightedBackground;
-    ColorWrapper listActiveHighlightedForeground;
+    ThemeColor listHeaderBackground;
+    ThemeColor listHeaderForeground;
+    ThemeColor listHeaderHighlightedBackground;
+    ThemeColor listHeaderHighlightedForeground;
+    ThemeColor listHighlightedBackground;
+    ThemeColor listHighlightedForeground;
+    ThemeColor listActiveForeground;
+    ThemeColor listActiveBackground;
+    ThemeColor listActiveHighlightedBackground;
+    ThemeColor listActiveHighlightedForeground;
 };
 
 /* some terminals report custom colors are supported, and also
@@ -498,9 +508,45 @@ static bool canChangeColors() {
 Colors::Colors() {
 }
 
+static std::string lastTheme = "default";
 static Theme theme;
+static std::vector<Theme> themes;
 static Colors::Mode colorMode = Colors::Basic;
 static Colors::BgType bgType = Colors::Theme;
+
+static void indexThemes(const std::string& directory) {
+    path colorPath(directory);
+    if (exists(colorPath)) {
+        directory_iterator end;
+        for (directory_iterator file(colorPath); file != end; file++) {
+            const path& p = file->path();
+
+            if (p.has_extension() && p.extension().string() == ".json") {
+                std::string fn = p.filename().string();
+                Theme theme;
+                if (theme.LoadFromFile(directory + "/" + fn)) {
+                   ::themes.push_back(theme);
+                }
+            }
+        }
+    }
+}
+
+static void indexThemes() {
+    if (!::themes.size()) {
+        ::themes.push_back(Theme()); /* default */
+
+        indexThemes(f8n::env::GetApplicationDirectory() + "/themes/");
+        indexThemes(f8n::env::GetDataDirectory() + "/themes/");
+
+        std::sort(
+            ::themes.begin(),
+            ::themes.end(),
+            [](const Theme& a, const Theme& b) -> bool {
+                return a.name < b.name;
+            });
+    }
+}
 
 void Colors::Init(Colors::Mode mode, Colors::BgType bgType) {
     start_color();
@@ -518,12 +564,24 @@ void Colors::Init(Colors::Mode mode, Colors::BgType bgType) {
         }
     }
 
-    theme.Reset();
-    theme.Apply(::colorMode, ::bgType);
+    SetTheme(::lastTheme);
 }
 
-void Colors::SetTheme(const std::string& fn) {
-    theme.Reset();
-    theme.LoadFromFile(fn);
-    theme.Apply(::colorMode, ::bgType);
+void Colors::SetTheme(const std::string& name) {
+    indexThemes();
+    for (auto& t : ::themes) {
+        if (name == t.name) {
+            ::lastTheme = name;
+            t.Apply(::colorMode, ::bgType);
+        }
+    }
+}
+
+std::vector<std::string> Colors::ListThemes() {
+    indexThemes();
+    std::vector<std::string> names;
+    for (auto& t : ::themes) {
+        names.push_back(t.name);
+    }
+    return names;
 }
