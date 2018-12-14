@@ -36,11 +36,14 @@
 
 #include <cursespp/curses_config.h>
 #include <cursespp/ScrollAdapterBase.h>
+#include <sigslot/sigslot.h>
 #include <deque>
 
 namespace cursespp {
     class SimpleScrollAdapter : public ScrollAdapterBase {
         public:
+            sigslot::signal1<SimpleScrollAdapter*> Changed;
+
             SimpleScrollAdapter();
             virtual ~SimpleScrollAdapter();
 

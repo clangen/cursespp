@@ -60,6 +60,7 @@ void SimpleScrollAdapter::SetSelectable(bool selectable) {
 
 void SimpleScrollAdapter::Clear() {
     this->entries.clear();
+    this->Changed(this);
 }
 
 size_t SimpleScrollAdapter::GetEntryCount() {
@@ -94,6 +95,8 @@ void SimpleScrollAdapter::AddEntry(std::shared_ptr<IEntry> entry) {
     while (entries.size() > this->maxEntries) {
         entries.pop_front();
     }
+
+    this->Changed(this);
 }
 
 void SimpleScrollAdapter::AddEntry(const std::string& value) {
