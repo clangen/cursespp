@@ -76,16 +76,19 @@ EntryPtr SimpleScrollAdapter::GetEntry(cursespp::ScrollableWindow* window, size_
 
     /* this is pretty damned gross, but super convenient. */
     if (window && selectable) {
-        SingleLineEntry* single = dynamic_cast<SingleLineEntry*>(entry.get());
-        if (single) {
-            single->SetAttrs(Color(Color::Default));
-            if (index == window->GetScrollPosition().logicalIndex) {
-                single->SetAttrs(Color(Color::ListItemHighlighted));
-            }
+        SingleLineEntry* single = static_cast<SingleLineEntry*>(entry.get());
+        single->SetAttrs(Color(Color::Default));
+        if (index == window->GetScrollPosition().logicalIndex) {
+            single->SetAttrs(Color(Color::ListItemHighlighted));
         }
     }
 
     return entry;
+}
+
+std::string SimpleScrollAdapter::StringAt(size_t index) {
+    auto entry = this->entries.at(index);
+    return static_cast<SingleLineEntry*>(entry.get())->GetValue();
 }
 
 void SimpleScrollAdapter::AddEntry(std::shared_ptr<IEntry> entry) {

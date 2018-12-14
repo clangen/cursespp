@@ -56,6 +56,7 @@ namespace cursespp {
 
             void SetSelectable(bool selectable);
             void AddEntry(const std::string& entry);
+            std::string StringAt(size_t index);
 
         private:
             typedef std::deque<EntryPtr> EntryList; /* TODO: this is O(n) lookup */

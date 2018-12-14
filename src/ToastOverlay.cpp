@@ -45,7 +45,7 @@ using namespace cursespp;
 using namespace f8n::runtime;
 using namespace f8n::utf;
 
-void ToastOverlay::Show(const std::string& text, long durationMs) {
+void ToastOverlay::Show(const std::string& text, int durationMs) {
     std::shared_ptr<ToastOverlay> overlay(new ToastOverlay(text, durationMs));
     App::Overlays().Push(overlay);
 }
@@ -80,7 +80,9 @@ bool ToastOverlay::KeyPress(const std::string& key) {
 
 void ToastOverlay::OnVisibilityChanged(bool visible) {
     if (visible && !ticking) {
-        this->Post(TOAST_MESSAGE_HIDE, 0, 0, this->durationMs);
+        if (this->durationMs >= 0) {
+            this->Post(TOAST_MESSAGE_HIDE, 0, 0, this->durationMs);
+        }
         this->ticking = true;
     }
 }
@@ -93,9 +95,9 @@ void ToastOverlay::ProcessMessage(IMessage &message) {
 
 void ToastOverlay::RecalculateSize() {
     int cols = (int) u8cols(this->title);
-    this->width = std::min(cols + 4, (Screen::GetWidth() * 2) / 3);
+    this->width = std::min(cols + 4, (Screen::GetWidth() * 4) / 5);
     this->titleLines = text::BreakLines(this->title, this->width - 4);
-    this->height = (int) this->titleLines.size() + 2;
+    this->height = std::min((int) this->titleLines.size() + 2, Screen::GetHeight() - 4);
     this->x = (Screen::GetWidth() / 2) - (this->width / 2);
     this->y = 2;
 }

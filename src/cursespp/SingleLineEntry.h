@@ -49,6 +49,8 @@ namespace cursespp {
 
             void SetAttrs(int64_t attrs);
 
+            std::string GetValue() { return value; }
+
         private:
             size_t width;
             std::string value;

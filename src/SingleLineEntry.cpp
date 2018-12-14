@@ -33,6 +33,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <cursespp/SingleLineEntry.h>
+#include <cursespp/Text.h>
 #include <f8n/str/utf.h>
 
 using namespace cursespp;
@@ -60,5 +61,5 @@ size_t SingleLineEntry::GetLineCount() {
 }
 
 std::string SingleLineEntry::GetLine(size_t line) {
-    return u8substr(this->value, 0, this->width > 0 ? this->width : 0);
+    return text::Ellipsize(this->value, this->width);
 }
