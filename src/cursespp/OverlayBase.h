@@ -41,6 +41,7 @@
 #include <cursespp/TextInput.h>
 #include <cursespp/Checkbox.h>
 #include <cursespp/Colors.h>
+#include <cursespp/ListWindow.h>
 
 namespace cursespp {
     class OverlayBase : public LayoutBase, public IOverlay {
@@ -95,6 +96,14 @@ namespace cursespp {
                     input.SetContentColor(Color::OverlayContent);
                     input.SetFocusedContentColor(Color::OverlayTextFocused);
                 }
+            }
+
+            static void style(ListWindow& listWindow, bool frameVisible = false) {
+                listWindow.SetContentColor(Color::OverlayContent);
+                listWindow.SetFocusedContentColor(Color::OverlayContent);
+                listWindow.SetFrameColor(Color::OverlayListFrame);
+                listWindow.SetFocusedFrameColor(Color::OverlayListFrameFocused);
+                listWindow.SetFrameVisible(frameVisible);
             }
 
             OverlayStack* GetOverlayStack() {

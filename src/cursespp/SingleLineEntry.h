@@ -35,6 +35,7 @@
 #pragma once
 
 #include <cursespp/IScrollAdapter.h>
+#include <cursespp/Colors.h>
 
 namespace cursespp {
     class SingleLineEntry : public IScrollAdapter::IEntry {
@@ -47,7 +48,7 @@ namespace cursespp {
             virtual size_t GetLineCount();
             virtual std::string GetLine(size_t line);
 
-            void SetAttrs(int64_t attrs);
+            void SetAttrs(Color attrs);
 
             std::string GetValue() { return value; }
 

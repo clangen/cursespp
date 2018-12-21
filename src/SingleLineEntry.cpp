@@ -52,7 +52,7 @@ int64_t SingleLineEntry::GetAttrs(size_t line) {
     return this->attrs;
 }
 
-void SingleLineEntry::SetAttrs(int64_t attrs) {
+void SingleLineEntry::SetAttrs(Color attrs) {
     this->attrs = attrs;
 }
 

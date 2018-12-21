@@ -364,6 +364,8 @@ struct Theme {
         init_pair(Color::OverlayContent, overlayForeground.Id(mode, -1), overlayBgId);
         init_pair(Color::OverlayTextInputFrame, overlayFocusedBorder.Id(mode, COLOR_RED), overlayBgId);
         init_pair(Color::OverlayTextFocused, overlayFocusedText.Id(mode, COLOR_RED), overlayBgId);
+        init_pair(Color::OverlayListFrame, foregroundId, overlayBgId);
+        init_pair(Color::OverlayListFrameFocused, focusedBorder.Id(mode, COLOR_RED), overlayBgId);
 
         /* shortcuts */
         init_pair(
