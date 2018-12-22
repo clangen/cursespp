@@ -9,6 +9,7 @@
 **/install_manifest.txt
 **/__output
 **/__build
+**/.DS_Store
 .vs
 .vscode
 obj
