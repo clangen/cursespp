@@ -64,6 +64,7 @@ namespace cursespp {
 
             virtual std::string GetText() { return this->buffer; }
             virtual size_t Length() { return f8n::utf::u8cols(this->buffer); }
+            virtual void SetAlignment(const text::TextAlign alignment);
             virtual void SetBold(bool bold);
             virtual bool IsBold() { return this->bold; }
             virtual void OnRedraw();
