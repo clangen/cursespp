@@ -106,6 +106,7 @@ namespace cursespp {
                 }
             };
 
+            void InitCurses();
             void UpdateFocusedWindow(IWindowPtr window);
             void EnsureFocusIsValid();
             void CheckShowOverlay();
@@ -122,8 +123,8 @@ namespace cursespp {
             std::string colorTheme;
             std::string quitKey{"^D"};
             int minWidth, minHeight;
-            bool mouseEnabled;
-            bool quit;
+            bool mouseEnabled{true};
+            bool quit{false}, initialized{false};
 
 #ifdef WIN32
             int iconId;

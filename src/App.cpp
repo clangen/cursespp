@@ -74,6 +74,21 @@ static void resizedHandler(int signal) {
     endwin(); /* required in *nix because? */
     resizeAt = App::Now() + REDRAW_DEBOUNCE_MS;
 }
+
+static bool isLangUtf8() {
+    const char* lang = std::getenv("LANG");
+
+    if (!lang) {
+        return false;
+    }
+
+    std::string str = std::string(lang);
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+
+    return
+        str.find("utf-8") != std::string::npos ||
+        str.find("utf8") != std::string::npos;
+}
 #endif
 
 App& App::Instance() {
@@ -99,7 +114,6 @@ App::App(const std::string& title) {
     this->appTitle = title;
     this->colorMode = Colors::RGB;
     win32::ConfigureDpiAwareness();
-    PDC_set_default_menu_visibility(0);
 #else
     setlocale(LC_ALL, "");
     std::signal(SIGWINCH, resizedHandler);
@@ -107,9 +121,19 @@ App::App(const std::string& title) {
     std::signal(SIGPIPE, SIG_IGN);
     this->colorMode = Colors::Palette;
 #endif
+}
 
-#ifdef __PDCURSES__
+App::~App() {
+    endwin();
+}
+
+void App::InitCurses() {
+#ifdef WIN32
     PDC_set_function_key(FUNCTION_KEY_SHUT_DOWN, 4);
+    PDC_set_default_menu_visibility(0);
+    PDC_set_title(this->appTitle.c_str());
+    win32::InterceptWndProc();
+    win32::SetAppTitle(this->appTitle);
 #endif
 
     initscr();
@@ -125,15 +149,13 @@ App::App(const std::string& title) {
     set_escdelay(20);
 #endif
 
-#ifdef __PDCURSES__
-    PDC_set_title(title.c_str());
-    win32::InterceptWndProc();
-    win32::SetAppTitle(title);
-#endif
+    Colors::Init(this->colorMode, this->bgType);
+
+    if (this->colorTheme.size()) {
+        Colors::SetTheme(this->colorTheme);
 }
 
-App::~App() {
-    endwin();
+    this->initialized = true;
 }
 
 void App::SetKeyHandler(KeyHandler handler) {
@@ -150,14 +172,26 @@ void App::SetResizeHandler(ResizeHandler handler) {
 
 void App::SetColorMode(Colors::Mode mode) {
     this->colorMode = mode;
+
+    if (this->initialized) {
+        Colors::Init(this->colorMode, this->bgType);
+    }
 }
 
 void App::SetColorBackgroundType(Colors::BgType bgType) {
     this->bgType = bgType;
+
+    if (this->initialized) {
+        Colors::Init(this->colorMode, this->bgType);
+    }
 }
 
 void App::SetColorTheme(const std::string& colorTheme) {
     this->colorTheme = colorTheme;
+
+    if (this->initialized) {
+        Colors::SetTheme(colorTheme);
+    }
 }
 
 void App::SetMinimumSize(int minWidth, int minHeight) {
@@ -276,13 +310,15 @@ void App::Run(ILayoutPtr layout) {
     if (App::Running(this->uniqueId, this->appTitle)) {
         return;
     }
+#else
+    if (!isLangUtf8()) {
+        std::cout << "\n\nThis application requires a UTF-8 compatible LANG environment "
+        "variable to be set in the controlling terminal. Exiting.\n\n\n";
+        return;
+    }
 #endif
 
-    Colors::Init(this->colorMode, this->bgType);
-
-    if (this->colorTheme.size()) {
-        Colors::SetTheme(this->colorTheme);
-    }
+    this->InitCurses();
 
     MEVENT mouseEvent;
     int64_t ch;
