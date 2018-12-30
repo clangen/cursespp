@@ -43,6 +43,7 @@
 #include <f8n/str/utf.h>
 #include <algorithm>
 #include <thread>
+#include <iostream>
 
 #ifdef WIN32
 #include <cursespp/Win32Util.h>
