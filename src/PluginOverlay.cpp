@@ -35,6 +35,7 @@
 #include <cursespp/PluginOverlay.h>
 
 #include <f8n/environment/Environment.h>
+#include <f8n/environment/Filesystem.h>
 #include <f8n/plugins/Plugins.h>
 #include <f8n/sdk/ISchema.h>
 #include <f8n/i18n/Locale.h>
@@ -52,14 +53,13 @@
 #include <cursespp/SingleLineEntry.h>
 #include <cursespp/Text.h>
 
-#include <boost/filesystem.hpp>
-
 #include <algorithm>
 #include <ostream>
 #include <iomanip>
 #include <limits>
 
 using namespace f8n;
+using namespace f8n::env;
 using namespace f8n::sdk;
 using namespace f8n::prefs;
 using namespace f8n::plugin;
@@ -195,7 +195,7 @@ class PluginListAdapter : public ScrollAdapterBase {
                 [&plugins, prefs](IPlugin* raw, Plugin plugin, const std::string& fn) {
                     PluginInfoPtr info(new PluginInfo());
                     info->plugin = raw;
-                    info->fn = boost::filesystem::path(fn).filename().string();
+                    info->fn = fs::GetFilename(fn);
                     info->enabled = prefs->GetBool(info->fn, true);
                     plugins.push_back(info);
                 });

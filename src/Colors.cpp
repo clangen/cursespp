@@ -35,11 +35,11 @@
 #include <json.hpp>
 #include <cursespp/Colors.h>
 #include <f8n/environment/Environment.h>
-#include <boost/filesystem.hpp>
+#include <f8n/environment/Filesystem.h>
 
 using namespace cursespp;
 using namespace nlohmann;
-using namespace boost::filesystem;
+using namespace f8n::env;
 
 /* if the terminal supports custom colors, these are the palette
 indicies we'll use to store them */
@@ -517,19 +517,10 @@ static Colors::Mode colorMode = Colors::Basic;
 static Colors::BgType bgType = Colors::Theme;
 
 static void indexThemes(const std::string& directory) {
-    path colorPath(directory);
-    if (exists(colorPath)) {
-        directory_iterator end;
-        for (directory_iterator file(colorPath); file != end; file++) {
-            const path& p = file->path();
-
-            if (p.has_extension() && p.extension().string() == ".json") {
-                std::string fn = p.filename().string();
-                Theme theme;
-                if (theme.LoadFromFile(directory + "/" + fn)) {
-                   ::themes.push_back(theme);
-                }
-            }
+    for (auto fn : fs::FindFilesWithExtensions(directory, { "json" }, false)) {
+        Theme theme;
+        if (theme.LoadFromFile(directory + "/" + fn)) {
+            ::themes.push_back(theme);
         }
     }
 }
