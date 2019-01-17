@@ -128,7 +128,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\f8n\src\3rdparty\include\;$(ProjectDir)..\f8n\src\3rdparty\win32_include\;$(ProjectDir)..\f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\f8n\src\3rdparty\include\;$(ProjectDir)..\f8n\src\3rdparty\win32_include\;$(ProjectDir)..\f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -143,7 +143,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>WIN32;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\f8n\src\3rdparty\include\;$(ProjectDir)..\f8n\src\3rdparty\win32_include\;$(ProjectDir)..\f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\f8n\src\3rdparty\include\;$(ProjectDir)..\f8n\src\3rdparty\win32_include\;$(ProjectDir)..\f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
