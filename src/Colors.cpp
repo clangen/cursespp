@@ -519,7 +519,7 @@ static Colors::BgType bgType = Colors::Theme;
 static void indexThemes(const std::string& directory) {
     for (auto fn : fs::FindFilesWithExtensions(directory, { "json" }, false)) {
         Theme theme;
-        if (theme.LoadFromFile(directory + "/" + fn)) {
+        if (theme.LoadFromFile(fn)) {
             ::themes.push_back(theme);
         }
     }

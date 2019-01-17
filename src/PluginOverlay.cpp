@@ -195,7 +195,7 @@ class PluginListAdapter : public ScrollAdapterBase {
                 [&plugins, prefs](IPlugin* raw, Plugin plugin, const std::string& fn) {
                     PluginInfoPtr info(new PluginInfo());
                     info->plugin = raw;
-                    info->fn = fs::GetFilename(fn);
+                    info->fn = fs::Filename(fn);
                     info->enabled = prefs->GetBool(info->fn, true);
                     plugins.push_back(info);
                 });
