@@ -71,7 +71,7 @@ void Checkbox::SetText(const std::string& value) {
         this->originalText = value;
         TextLabel::SetText(decorate(value, this->checked));
     }
-    }
+}
 
 std::string Checkbox::GetText() {
     return this->originalText;

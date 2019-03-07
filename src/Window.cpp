@@ -55,6 +55,7 @@ static int NEXT_ID = 0;
 static bool drawPending = false;
 static bool freeze = false;
 static Window* top = nullptr;
+static Window* focused = nullptr;
 
 static MessageQueue messageQueue;
 static std::shared_ptr<INavigationKeys> keys;
@@ -141,7 +142,6 @@ Window::Window(IWindow *parent) {
     this->focusedFrameColor = Color(Color::FrameColorFocused);
     this->drawFrame = true;
     this->isVisibleInParent = false;
-    this->isFocused = false;
     this->isDirty = true;
     this->focusOrder = -1;
     this->id = NEXT_ID++;
@@ -150,6 +150,8 @@ Window::Window(IWindow *parent) {
 
 Window::~Window() {
     messageQueue.Remove(this);
+    if (::top == this) { top = nullptr; }
+    if (::focused == this) { focused = nullptr; }
     this->Destroy();
 }
 
@@ -166,7 +168,7 @@ bool Window::IsVisible() {
 }
 
 bool Window::IsFocused() {
-    return this->isFocused;
+    return ::focused == this;
 }
 
 void Window::BringToTop() {
@@ -772,8 +774,8 @@ void Window::Clear() {
     wmove(this->content, 0, 0);
 
     bool focused = this->IsFocused();
-    int64_t contentColor = isFocused ? this->focusedContentColor : this->contentColor;
-    int64_t frameColor = isFocused ? this->focusedFrameColor : this->frameColor;
+    int64_t contentColor = focused ? this->focusedContentColor : this->contentColor;
+    int64_t frameColor = focused ? this->focusedFrameColor : this->frameColor;
 
     if (this->content == this->frame) {
         wbkgd(this->frame, contentColor);
@@ -809,8 +811,9 @@ bool Window::IsParentVisible() {
 }
 
 void Window::Focus() {
-    if (!this->isFocused) {
-        this->isFocused = true;
+    if (::focused != this) {
+        if (::focused) { ::focused->Blur(); }
+        ::focused = this;
         this->isDirty = true;
         this->OnFocusChanged(true);
         this->RepaintBackground();
@@ -819,8 +822,8 @@ void Window::Focus() {
 }
 
 void Window::Blur() {
-    if (this->isFocused) {
-        this->isFocused = false;
+    if (::focused == this) {
+        ::focused = nullptr;
         this->isDirty = true;
         this->OnFocusChanged(false);
         this->RepaintBackground();

@@ -53,6 +53,7 @@
 
 #ifndef WIN32
 #include <csignal>
+#include <cstdlib>
 #include <locale.h>
 #endif
 
@@ -105,7 +106,6 @@ App::App(const std::string& title) {
     }
 
     instance = this; /* only one instance. */
-
     this->quit = false;
     this->minWidth = this->minHeight = 0;
     this->mouseEnabled = true;
@@ -145,7 +145,6 @@ void App::InitCurses() {
     refresh();
     curs_set(0);
     mousemask(ALL_MOUSE_EVENTS, nullptr);
-
 #ifndef WIN32
     set_escdelay(20);
 #endif
@@ -154,7 +153,7 @@ void App::InitCurses() {
 
     if (this->colorTheme.size()) {
         Colors::SetTheme(this->colorTheme);
-}
+    }
 
     this->initialized = true;
 }
@@ -450,10 +449,6 @@ process:
 
 void App::UpdateFocusedWindow(IWindowPtr window) {
     if (this->state.focused != window) {
-        if (this->state.focused) {
-            this->state.focused->Blur();
-        }
-
         this->state.focused = window;
         this->state.input = dynamic_cast<IInput*>(window.get());
         this->state.keyHandler = dynamic_cast<IKeyHandler*>(window.get());
@@ -497,6 +492,7 @@ void App::CheckShowOverlay() {
             newTopLayout->Layout();
             newTopLayout->Show();
             newTopLayout->BringToTop();
+            newTopLayout->FocusFirst();
         }
     }
 }
