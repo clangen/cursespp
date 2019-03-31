@@ -45,7 +45,9 @@ using namespace cursespp;
 DialogOverlay::DialogOverlay() {
     this->SetFrameVisible(true);
     this->SetFrameColor(Color::OverlayFrame);
+    this->SetFocusedFrameColor(Color::OverlayFrame);
     this->SetContentColor(Color::OverlayContent);
+    this->SetFocusedContentColor(Color::OverlayContent);
 
     this->width = this->height = 0;
     this->autoDismiss = true;

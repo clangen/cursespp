@@ -56,11 +56,11 @@ namespace cursespp {
                 this->stack = nullptr;
             }
 
-            virtual void SetOverlayStack(OverlayStack* stack) {
+            virtual void SetOverlayStack(OverlayStack* stack) override {
                 this->stack = stack;
             }
 
-            virtual bool IsTop() {
+            virtual bool IsTop() override {
                 if (LayoutBase::IsTop()) {
                     return true;
                 }
@@ -72,6 +72,15 @@ namespace cursespp {
                 }
 
                 return false;
+            }
+
+            virtual IWindowPtr FocusFirst() override {
+                auto focus = LayoutBase::FocusFirst();
+                if (!focus) {
+                    focus = shared_from_this();
+                    this->Focus();
+                }
+                return focus;
             }
 
         protected:
