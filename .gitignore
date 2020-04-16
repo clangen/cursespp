@@ -8,7 +8,11 @@
 **/cmake_install.cmake
 **/install_manifest.txt
 **/__output
+**/__output32
+**/__output64
 **/__build
+**/__build32
+**/__build64
 **/.DS_Store
 .vs
 .vscode

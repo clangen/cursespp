@@ -732,17 +732,17 @@ void Window::Hide() {
             this->Destroy();
             this->isVisibleInParent = false;
             this->OnVisibilityChanged(false);
-            notifyParent = (this->parent != nullptr);
+            notifyParent = true;
         }
     }
     else {
         if (this->isVisibleInParent) {
-            notifyParent = (this->parent != nullptr);
+            notifyParent = true;
             this->isVisibleInParent = false;
         }
     }
 
-    if (notifyParent) {
+    if (notifyParent && this->parent) {
         this->parent->OnChildVisibilityChanged(false, this);
     }
 }
@@ -783,17 +783,19 @@ IWindow* Window::GetParent() const {
 }
 
 void Window::Clear() {
+    if (this->content) {
     werase(this->content);
     wmove(this->content, 0, 0);
+    }
 
     bool focused = this->IsFocused();
     int64_t contentColor = focused ? this->focusedContentColor : this->contentColor;
     int64_t frameColor = focused ? this->focusedFrameColor : this->frameColor;
 
-    if (this->content == this->frame) {
+    if (this->content == this->frame && this->frame) {
         wbkgd_internal(this->frame, contentColor);
     }
-    else {
+    else if (this->frame && this->content) {
         wbkgd_internal(this->frame, frameColor);
         wbkgd_internal(this->content, contentColor);
     }

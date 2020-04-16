@@ -57,6 +57,7 @@ InputOverlay::InputOverlay() {
     this->SetFrameColor(Color::OverlayFrame);
     this->SetContentColor(Color::OverlayContent);
 
+    this->allowEmptyValue = false;
     this->width = this->height = this->setWidth = 0;
 
     this->textInput.reset(new TextInput());
@@ -103,6 +104,11 @@ InputOverlay& InputOverlay::SetText(const std::string& text) {
     return *this;
 }
 
+InputOverlay& InputOverlay::SetAllowEmptyValue(bool allowEmptyValue) {
+    this->allowEmptyValue = allowEmptyValue;
+    return *this;
+}
+
 InputOverlay& InputOverlay::SetWidth(int width) {
     this->setWidth = width;
 
@@ -132,7 +138,7 @@ bool InputOverlay::KeyPress(const std::string& key) {
 }
 
 void InputOverlay::OnInputEnterPressed(TextInput* input) {
-    if (input->GetText().size()) {
+    if (input->GetText().size() || this->allowEmptyValue) {
         if (validator && !validator->IsValid(input->GetText())) {
             std::shared_ptr<DialogOverlay> dialog(new DialogOverlay());
 

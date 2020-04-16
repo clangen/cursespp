@@ -66,6 +66,7 @@ bool sortByFocusOrder(IWindowPtr a, IWindowPtr b) {
 
 LayoutBase::LayoutBase(IWindow* parent)
 : Window(parent)
+, focused(0)
 , focusMode(FocusModeCircular) {
     this->SetFrameVisible(false);
 }

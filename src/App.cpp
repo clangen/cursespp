@@ -77,19 +77,38 @@ static void resizedHandler(int signal) {
     resizeAt = App::Now() + REDRAW_DEBOUNCE_MS;
 }
 
-static bool isLangUtf8() {
-    const char* lang = std::getenv("LANG");
+static std::string getEnvironmentVariable(const std::string& name) {
+    std::string result;
+    const char* value = std::getenv(name.c_str());
+    if (value) {
+        result = value;
+    }
+    std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+    return result;
+}
 
-    if (!lang) {
-        return false;
+static bool containsUtf8(const std::string& value) {
+    return
+        value.find("utf-8") != std::string::npos ||
+        value.find("utf8") != std::string::npos;
+}
+
+static bool isLangUtf8() {
+    /* https://github.com/clangen/musikcube/issues/324 */
+
+    std::string lcAll = getEnvironmentVariable("LC_ALL");
+    std::string lcCType = getEnvironmentVariable("LC_CTYPE");
+    std::string lang = getEnvironmentVariable("LANG");
+
+    if (lcAll.size()) {
+        return containsUtf8(lcAll);
     }
 
-    std::string str = std::string(lang);
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    if (lcCType.size()) {
+        return containsUtf8(lcCType);
+    }
 
-    return
-        str.find("utf-8") != std::string::npos ||
-        str.find("utf8") != std::string::npos;
+    return containsUtf8(lang);
 }
 #endif
 
@@ -110,9 +129,10 @@ App::App(const std::string& title) {
     this->minWidth = this->minHeight = 0;
     this->mouseEnabled = true;
 
+    this->SetTitle(title);
+
 #ifdef WIN32
     this->iconId = 0;
-    this->appTitle = title;
     this->colorMode = Colors::RGB;
     win32::ConfigureDpiAwareness();
 #else
@@ -131,9 +151,11 @@ App::~App() {
 void App::InitCurses() {
 #ifdef WIN32
     PDC_set_function_key(FUNCTION_KEY_SHUT_DOWN, 4);
-    PDC_set_default_menu_visibility(0);
-    PDC_set_title(this->appTitle.c_str());
-    PDC_set_color_intensify_enabled(false);
+    #ifdef PDCURSES_WINGUI
+        PDC_set_default_menu_visibility(0);
+        PDC_set_title(this->appTitle.c_str());
+        PDC_set_color_intensify_enabled(false);
+    #endif
 #endif
 
     initscr();
@@ -149,7 +171,7 @@ void App::InitCurses() {
     set_escdelay(20);
 #endif
 
-#ifdef WIN32
+#ifdef PDCURSES_WINGUI
     /* needs to happen after initscr() */
     win32::InterceptWndProc();
     win32::SetAppTitle(this->appTitle);
@@ -180,6 +202,9 @@ void App::SetResizeHandler(ResizeHandler handler) {
 }
 
 void App::SetColorMode(Colors::Mode mode) {
+#if defined(PDCURSES_WINCON)
+    mode = Colors::Basic;
+#endif
     this->colorMode = mode;
 
     if (this->initialized) {
@@ -221,32 +246,63 @@ void App::SetSingleInstanceId(const std::string& uniqueId) {
 }
 
 bool App::RegisterFont(const std::string& filename) {
+#if defined(PDCURSES_WINGUI)
     return win32::RegisterFont(filename) > 0;
+#else
+    return false;
+#endif
 }
 
 void App::SetDefaultFontface(const std::string& fontface) {
+#if defined(PDCURSES_WINGUI)
     PDC_set_preferred_fontface(u8to16(fontface).c_str());
+#endif
 }
 
 void App::SetDefaultMenuVisibility(bool visible) {
+#if defined(PDCURSES_WINGUI)
     PDC_set_default_menu_visibility(visible);
+#endif
 }
 #endif
 
-void App::SetMinimizeToTray(bool minimizeToTray) {
+void App::SetTitle(const std::string& title) {
+    this->appTitle = title;
 #ifdef WIN32
+    PDC_set_title(this->appTitle.c_str());
+    win32::SetAppTitle(this->appTitle);
+#else
+    /* stolen from https://github.com/cmus/cmus/blob/fead80b207b79ae6d10ab2b1601b11595d719908/ui_curses.c#L2349 */
+    const char* term = getenv("TERM");
+    if (term) {
+        if (!strcmp(term, "screen")) {
+            std::cout << "\033_" << this->appTitle.c_str() << "\033\\";
+        }
+        else if (!strncmp(term, "xterm", 5) ||
+                 !strncmp(term, "rxvt", 4) ||
+                 !strcmp(term, "Eterm"))
+        {
+            std::cout << "\033]0;" << this->appTitle.c_str() << "\007";
+}
+    }
+    Window::InvalidateScreen();
+#endif
+}
+
+void App::SetMinimizeToTray(bool minimizeToTray) {
+#ifdef PDCURSES_WINGUI
     win32::SetMinimizeToTray(minimizeToTray);
 #endif
 }
 
 void App::Minimize() {
-#ifdef WIN32
+#ifdef PDCURSES_WINGUI
     win32::Minimize();
 #endif
 }
 
 void App::Restore() {
-#ifdef WIN32
+#ifdef PDCURSES_WINGUI
     win32::ShowMainWindow();
 #endif
 }
@@ -445,7 +501,7 @@ process:
         messages, ensure our overlay is on top, then do a redraw. */
         Window::MessageQueue().Dispatch();
 
-        if (this->state.overlayWindow && !this->state.overlayWindow->IsTop()) {
+        if (this->state.overlayWindow) {
             this->state.overlay->BringToTop(); /* active overlay is always on top... */
         }
 
@@ -504,6 +560,10 @@ void App::CheckShowOverlay() {
             newTopLayout->FocusFirst();
         }
     }
+}
+
+ILayoutPtr App::GetLayout() {
+    return this->state.layout;
 }
 
 void App::ChangeLayout(ILayoutPtr newLayout) {

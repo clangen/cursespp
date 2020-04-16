@@ -42,7 +42,7 @@ static std::string stringValueForDouble(const double value, const int precision 
     return out.str();
 }
 
-static std::function<std::string(int)> INT_FORMATTER =
+static std::function<std::string(int)> intFormatter =
 [](int value) -> std::string {
     return std::to_string(value);
 };
@@ -85,8 +85,9 @@ static std::string stringValueFor(
             auto precision = doubleEntry->precision;
             return stringValueForDouble(prefs->GetDouble(name, defaultValue), precision);
         }
-        case ISchema::Type::String:
+        case ISchema::Type::String: {
             return prefs->GetString(name, DEFAULT(StringEntry));
+        }
         case ISchema::Type::Enum:
             return prefs->GetString(name, DEFAULT(EnumEntry));
     }
@@ -151,7 +152,7 @@ class SchemaAdapter: public ScrollAdapterBase {
             int avail = std::max(0, width - int(u8cols(name)) - 1 - 1);
             auto display = " " + name + " " + text::Align(value + " ", text::AlignRight, avail);
 
-            SinglePtr result = SinglePtr(new SingleLineEntry(text::Ellipsize(display, width)));
+            auto result = std::make_shared<SingleLineEntry>(text::Ellipsize(display, width));
 
             result->SetAttrs(Color(Color::Default));
             if (index == window->GetScrollPosition().logicalIndex) {
@@ -260,10 +261,10 @@ void SchemaOverlay::ShowIntOverlay(
     std::string name(entry->entry.name);
 
     auto title = numberInputTitle(
-        name, entry->minValue, entry->maxValue, INT_FORMATTER);
+        name, entry->minValue, entry->maxValue, intFormatter);
 
     auto validator = std::make_shared<NumberValidator<int>>(
-        entry->minValue,  entry->maxValue, INT_FORMATTER);
+        entry->minValue,  entry->maxValue, intFormatter);
 
     auto handler = [prefs, name, callback](std::string value) {
         prefs->SetInt(name, (int) std::stod(value));
@@ -329,6 +330,7 @@ void SchemaOverlay::ShowStringOverlay(
     dialog->SetTitle(name)
         .SetText(stringValueFor(prefs, entry))
         .SetWidth(overlayWidth())
+        .SetAllowEmptyValue(entry->defaultValue && strlen(entry->defaultValue))
         .SetInputAcceptedCallback(handler);
 
     App::Overlays().Push(dialog);
