@@ -36,6 +36,7 @@
 #include <cursespp/Colors.h>
 #include <f8n/environment/Environment.h>
 #include <f8n/environment/Filesystem.h>
+#include <set>
 
 using namespace cursespp;
 using namespace nlohmann;
@@ -139,7 +140,6 @@ palette, use ones that most closely match our desired colors */
 #define COLOR_256_OFFWHITE 251
 
 #define SCALE(x) ((x * 1000) / 255)
-
 struct ThemeColor {
     ThemeColor() {
         Set(0, 0, 0, 0, -1);
@@ -243,8 +243,8 @@ struct Theme {
         buttonForegroundActive.Set(THEME_COLOR_BUTTON_FOREGROUND_ACTIVE, 24, 24, 20, COLOR_BLACK);
 
         /* banner */
-        bannerBackground.Set(THEME_COLOR_BANNER_BACKGROUND, 255, 150, 32, COLOR_256_ORANGE);
-        bannerForeground.Set(THEME_COLOR_BANNER_FOREGROUND, 24, 24, 20, COLOR_BLACK);
+        bannerBackground.Set(THEME_COLOR_BANNER_BACKGROUND, 24, 24, 20, -1);
+        bannerForeground.Set(THEME_COLOR_BANNER_FOREGROUND, 128, 128, 128, COLOR_256_MEDIUM_GRAY);
 
         /* footer */
         footerBackground.Set(THEME_COLOR_FOOTER_BACKGROUND, 102, 217, 238, COLOR_256_BLUE);
@@ -392,8 +392,8 @@ struct Theme {
         /* banner */
         init_pair(
             Color::Banner,
-            bannerForeground.Id(mode, COLOR_BLACK),
-            bannerBackground.Id(mode, COLOR_YELLOW));
+            bannerForeground.Id(mode, COLOR_WHITE),
+            backgroundId);
 
         /* footer */
         init_pair(
@@ -491,12 +491,17 @@ struct Theme {
 
 /* some terminals report custom colors are supported, and also
 don't error when calling init_color(), but don't actually work. */
+
+static const std::set<std::string> kTrueColorTerminalBacklist = { "vscode" };
+
 static bool canChangeColors() {
-#ifdef __APPLE__
     const char* termEnv = std::getenv("TERM_PROGRAM");
     std::string term;
     if (termEnv && strlen(termEnv)) {
         term = std::string(termEnv);
+        if (kTrueColorTerminalBacklist.find(term) != kTrueColorTerminalBacklist.end()) {
+            return false;
+        }
         if (term == "Apple_Terminal") {
             const char* termVer = std::getenv("TERM_PROGRAM_VERSION");
             if (termVer && strlen(termVer)) {
@@ -511,10 +516,7 @@ static bool canChangeColors() {
             return false;
         }
     }
-    return can_change_color();
-#else
     return !!can_change_color();
-#endif
 }
 
 Colors::Colors() {

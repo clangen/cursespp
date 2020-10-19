@@ -40,6 +40,7 @@
 #include <Commctrl.h>
 #include <shellapi.h>
 #include <string>
+#include <memory>
 
 using namespace f8n::utf;
 

@@ -277,7 +277,7 @@ void SchemaOverlay::ShowIntOverlay(
         .SetText(stringValueFor(prefs, entry))
         .SetValidator(validator)
         .SetWidth(overlayWidth())
-        .SetInputAcceptedCallback(callback);
+        .SetInputAcceptedCallback(handler);
 
     App::Overlays().Push(dialog);
 }

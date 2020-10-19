@@ -206,7 +206,6 @@ void App::SetColorMode(Colors::Mode mode) {
     mode = Colors::Basic;
 #endif
     this->colorMode = mode;
-
     if (this->initialized) {
         Colors::Init(this->colorMode, this->bgType);
     }
@@ -283,7 +282,7 @@ void App::SetTitle(const std::string& title) {
                  !strcmp(term, "Eterm"))
         {
             std::cout << "\033]0;" << this->appTitle.c_str() << "\007";
-}
+        }
     }
     Window::InvalidateScreen();
 #endif
@@ -406,7 +405,7 @@ void App::Run(ILayoutPtr layout) {
 
         timeout(IDLE_TIMEOUT_MS);
 
-        if (this->state.input) {
+        if (this->state.input && this->state.focused->GetContent()) {
             /* if the focused window is an input, allow it to draw a cursor */
             WINDOW *c = this->state.focused->GetContent();
             keypad(c, TRUE);

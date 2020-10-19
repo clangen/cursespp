@@ -78,16 +78,15 @@ mention wbkgd() was changed, but it's unclear what exactly happened... */
 static inline void DrawCursor(IInput* input) {
     if (input) {
         Window* inputWindow = dynamic_cast<Window*>(input);
-        if (inputWindow) {
+        if (inputWindow && inputWindow->GetContent()) {
             WINDOW* content = inputWindow->GetContent();
             curs_set(1);
             wtimeout(content, IDLE_TIMEOUT_MS);
-            wmove(content, 0, input->Position());
+            wmove(content, 0, (int) input->Position());
+            return;
         }
     }
-    else {
-        curs_set(0);
-    }
+    curs_set(0);
 }
 
 static inline void DrawTooSmall() {
@@ -159,10 +158,11 @@ Window::Window(IWindow *parent) {
     this->focusOrder = -1;
     this->id = NEXT_ID++;
     this->badBounds = false;
+    Window::MessageQueue().Register(this);
 }
 
 Window::~Window() {
-    messageQueue.Remove(this);
+    Window::MessageQueue().Unregister(this);
     if (::top == this) { top = nullptr; }
     if (::focused == this) { focused = nullptr; }
     this->Destroy();
@@ -172,7 +172,7 @@ int Window::GetId() const {
     return this->id;
 }
 
-void Window::ProcessMessage(f8n::runtime::IMessage &message) {
+void Window::ProcessMessage(IMessage &message) {
 
 }
 
@@ -784,8 +784,8 @@ IWindow* Window::GetParent() const {
 
 void Window::Clear() {
     if (this->content) {
-    werase(this->content);
-    wmove(this->content, 0, 0);
+        werase(this->content);
+        wmove(this->content, 0, 0);
     }
 
     bool focused = this->IsFocused();
