@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2019 musikcube team
+// Copyright (c) 2004-2020 musikcube team
 //
 // All rights reserved.
 //
@@ -92,6 +92,9 @@ void ToastOverlay::OnVisibilityChanged(bool visible) {
 void ToastOverlay::ProcessMessage(IMessage &message) {
     if (message.Type() == TOAST_MESSAGE_HIDE) {
         this->Dismiss();
+    }
+    else {
+        OverlayBase::ProcessMessage(message);
     }
 }
 

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2019 musikcube team
+// Copyright (c) 2004-2020 musikcube team
 //
 // All rights reserved.
 //
@@ -215,8 +215,8 @@ namespace cursespp {
             const HWND hwnd = GetMainWindow();
             icon16 = loadIcon(resourceId, 16);
             icon32 = loadIcon(resourceId, 48);
-            SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM) icon16);
-            SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM) icon32);
+            PostMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM) icon16);
+            PostMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM) icon32);
         }
 
         void InterceptWndProc() {

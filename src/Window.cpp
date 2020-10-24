@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2007-2019 musikcube team
+// Copyright (c) 2004-2020 musikcube team
 //
 // All rights reserved.
 //
@@ -59,6 +59,10 @@ static Window* focused = nullptr;
 
 static MessageQueue messageQueue;
 static std::shared_ptr<INavigationKeys> keys;
+
+const int Window::kLastReservedMessageId = INT_MAX;
+const int Window::kFirstReservedMessageId = kLastReservedMessageId - 1024;
+static const int kNotifyVisibilityChangedMessageId = Window::kFirstReservedMessageId + 1;
 
 #define ENABLE_BOUNDS_CHECK 1
 
@@ -173,7 +177,16 @@ int Window::GetId() const {
 }
 
 void Window::ProcessMessage(IMessage &message) {
-
+    if (message.Type() == kNotifyVisibilityChangedMessageId) {
+        bool becameVisible = message.UserData1() != 0LL;
+        if (becameVisible != this->lastNotifiedVisible) {
+            this->lastNotifiedVisible = becameVisible;
+            this->OnVisibilityChanged(becameVisible);
+            if (this->parent) {
+                this->parent->OnChildVisibilityChanged(becameVisible, this);
+            }
+        }
+    }
 }
 
 bool Window::IsVisible() {
@@ -238,7 +251,7 @@ void Window::SetParent(IWindow* parent) {
 
         this->parent = parent;
 
-        if (visible) {
+        if (this->parent && visible) {
             this->Show();
         }
 
@@ -252,15 +265,8 @@ void Window::SetParent(IWindow* parent) {
 }
 
 void Window::RecreateForUpdatedDimensions() {
-    bool hasFrame = !!this->frame;
-    if (hasFrame || this->isVisibleInParent) {
-        this->Recreate();
-
-        if (!hasFrame) {
-            this->OnVisibilityChanged(true);
-        }
-    }
-
+    this->Recreate();
+    this->NotifyVisibilityChange(true);
     this->OnDimensionsChanged();
 }
 
@@ -498,18 +504,17 @@ void Window::Show() {
         /* remember that someone tried to make us visible, but don't do
         anything because we could corrupt the display */
         this->isVisibleInParent = true;
+        this->NotifyVisibilityChange(false);
         return;
     }
-
-    bool notifyParent = false;
 
     if (this->badBounds) {
         if (!this->CheckForBoundsError()) {
             this->Recreate();
             this->badBounds = false;
-            notifyParent = true;
         }
         this->isVisibleInParent = true;
+        this->NotifyVisibilityChange(false);
     }
     else {
         if (this->framePanel) {
@@ -522,23 +527,18 @@ void Window::Show() {
 
                 this->isVisibleInParent = true;
                 drawPending = true;
-                notifyParent = true;
-                this->OnVisibilityChanged(true);
             }
         }
         else {
             this->Create();
-            notifyParent = true;
             this->isVisibleInParent = true;
         }
 
         if (this->isDirty) {
             this->Redraw();
         }
-    }
 
-    if (notifyParent && this->parent) {
-        this->parent->OnChildVisibilityChanged(true, this);
+        this->NotifyVisibilityChange(true);
     }
 }
 
@@ -564,15 +564,15 @@ void Window::OnParentVisibilityChanged(bool visible) {
 }
 
 bool Window::CheckForBoundsError() {
-    if (this->parent && ((Window *)this->parent)->CheckForBoundsError()) {
+    if (this->parent && ((Window *) this->parent)->CheckForBoundsError()) {
         return true;
     }
 
-    int screenCy = Screen::GetHeight();
-    int screenCx = Screen::GetWidth();
+    int const screenCy = Screen::GetHeight();
+    int const screenCx = Screen::GetWidth();
 
-    int cx = this->GetWidth();
-    int cy = this->GetHeight();
+    int const cx = this->GetWidth();
+    int const cy = this->GetHeight();
 
     if (cx <= 0 || cy <= 0) {
         return true;
@@ -716,35 +716,30 @@ void Window::Create() {
         this->Show();
 
         if (hadBadBounds && this->isVisibleInParent) {
-            this->OnVisibilityChanged(true);
-            if (this->parent) {
-                this->parent->OnChildVisibilityChanged(true, this);
-            }
+            this->NotifyVisibilityChange(true);
+        }
+        else if (!hadBadBounds && this->badBounds) {
+            this->NotifyVisibilityChange(false);
         }
     }
 }
 
 void Window::Hide() {
-    bool notifyParent = false;
     this->Blur();
+
     if (this->frame) {
         if (this->isVisibleInParent) {
             this->Destroy();
             this->isVisibleInParent = false;
-            this->OnVisibilityChanged(false);
-            notifyParent = true;
         }
     }
     else {
         if (this->isVisibleInParent) {
-            notifyParent = true;
             this->isVisibleInParent = false;
         }
     }
 
-    if (notifyParent && this->parent) {
-        this->parent->OnChildVisibilityChanged(false, this);
-    }
+    this->NotifyVisibilityChange(false);
 }
 
 void Window::Destroy() {
@@ -761,6 +756,8 @@ void Window::Destroy() {
     this->framePanel = this->contentPanel = 0;
     this->content = this->frame = 0;
     this->isDirty = true;
+
+    this->NotifyVisibilityChange(false);
 }
 
 void Window::SetFrameVisible(bool enabled) {
@@ -860,6 +857,10 @@ bool Window::FocusInParent() {
         return layout->SetFocus(shared_from_this());
     }
     return false;
+}
+
+void Window::NotifyVisibilityChange(bool becameVisible) {
+    this->Debounce(kNotifyVisibilityChangedMessageId, becameVisible ? 1LL : 0LL, 0, 0);
 }
 
 /* default keys for navigating around sub-views. apps can override this shim to
