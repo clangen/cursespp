@@ -44,6 +44,7 @@
 #include <algorithm>
 #include <thread>
 #include <iostream>
+#include <cstring>
 
 #ifdef WIN32
 #include <cursespp/Win32Util.h>

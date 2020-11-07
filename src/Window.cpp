@@ -44,6 +44,7 @@
 #include <f8n/runtime/Message.h>
 #include <f8n/runtime/MessageQueue.h>
 
+#include <climits>
 #include <cassert>
 
 using namespace cursespp;
