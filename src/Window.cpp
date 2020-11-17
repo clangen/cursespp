@@ -170,9 +170,9 @@ Window::Window(IWindow *parent) {
     this->lastAbsoluteX = 0;
     this->lastAbsoluteY = 0;
     this->contentColor = Color(Color::ContentColorDefault);
-    this->frameColor = Color(Color::FrameColorDefault);
+    this->frameColor = Color(Color::FrameDefault);
     this->focusedContentColor = Color(Color::ContentColorDefault);
-    this->focusedFrameColor = Color(Color::FrameColorFocused);
+    this->focusedFrameColor = Color(Color::FrameFocused);
     this->drawFrame = true;
     this->isVisibleInParent = false;
     this->isDirty = true;
@@ -486,7 +486,7 @@ void Window::SetFrameColor(Color color) {
     ASSERT_MAIN_THREAD();
 
     this->frameColor = (color == Color::Default)
-        ? Color::FrameColorDefault : color;
+        ? Color::FrameDefault : color;
 
     this->RepaintBackground();
     this->Redraw();
@@ -496,7 +496,7 @@ void Window::SetFocusedFrameColor(Color color) {
     ASSERT_MAIN_THREAD();
 
     this->focusedFrameColor = (color == Color::Default)
-        ? Color::FrameColorFocused : color;
+        ? Color::FrameFocused : color;
 
     this->RepaintBackground();
     this->Redraw();
