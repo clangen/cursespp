@@ -94,16 +94,26 @@ mention wbkgd() was changed, but it's unclear what exactly happened... */
 
 static inline void DrawCursor(IInput* input) {
     if (input) {
-        Window* inputWindow = dynamic_cast<Window*>(input);
+        const Window* inputWindow = dynamic_cast<Window*>(input);
         if (inputWindow && inputWindow->GetContent()) {
+            if (!cursorVisible) {
+                curs_set(1);
+                cursorVisible = true;
+            }
             WINDOW* content = inputWindow->GetContent();
-            curs_set(1);
-            wtimeout(content, IDLE_TIMEOUT_MS);
-            wmove(content, 0, (int) input->Position());
+            if (content) {
+                wtimeout(content, IDLE_TIMEOUT_MS);
+                const int targetY = 0;
+                const int targetX = (int) input->Position();
+                wmove(content, targetY, targetX);
+            }
             return;
         }
     }
-    curs_set(0);
+    if (cursorVisible) {
+        curs_set(0);
+        cursorVisible = false;
+    }
 }
 
 static inline void DrawTooSmall() {
