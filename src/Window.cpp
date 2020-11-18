@@ -57,6 +57,7 @@ static bool drawPending = false;
 static bool freeze = false;
 static Window* top = nullptr;
 static Window* focused = nullptr;
+static bool cursorVisible = false;
 
 static MessageQueue messageQueue;
 static std::shared_ptr<INavigationKeys> keys;
