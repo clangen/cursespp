@@ -47,7 +47,7 @@ namespace cursespp {
             : minimum(minimum), maximum(maximum), formatter(formatter) {
         }
 
-        virtual bool IsValid(const std::string& input) const override {
+        bool IsValid(const std::string& input) const override {
             try {
                 double result = std::stod(input);
                 if (bounded(minimum, maximum) && (result < minimum || result > maximum)) {
@@ -60,7 +60,7 @@ namespace cursespp {
             return true;
         }
 
-        virtual const std::string ErrorMessage() const override {
+        const std::string ErrorMessage() const override {
             if (bounded(minimum, maximum)) {
                 std::string result = _TSTR("validator_dialog_number_parse_bounded_error");
                 f8n::str::replace(result, "{{minimum}}", formatter(minimum));

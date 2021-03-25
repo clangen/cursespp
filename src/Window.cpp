@@ -421,6 +421,12 @@ void Window::Redraw() {
         }
 
         if (this->frame) {
+#if defined(__FreeBSD__) || (NCURSES_VERSION_PATCH >= 20200301)
+            /* but depending on curses version we'll get redraw artifacts if we do or don't
+            repaint the background. the changelog mentions changes to wbkgd() and wbkgrnd()
+            at revision 20200301, but it's unclear if this is the actual root cause or not. */
+            this->RepaintBackground();
+#endif
             this->OnRedraw();
             this->Invalidate();
             this->isDirty = false;

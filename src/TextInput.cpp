@@ -46,7 +46,7 @@ inline static bool removeUtf8Char(std::string& value, size_t position) {
     /* optimize the normal case, at the end... */
     if (position >= value.size()) {
         std::string::iterator it = value.end();
-        std::string::iterator start = value.begin();
+        const std::string::iterator start = value.begin();
         if (it != start) {
             utf8::prior(it, start);
             value = std::string(value.begin(), it);
@@ -54,9 +54,9 @@ inline static bool removeUtf8Char(std::string& value, size_t position) {
         }
     }
     else {
-        size_t offset = u8offset(value, position - 1);
+        const size_t offset = u8offset(value, position - 1);
         if (offset != std::string::npos) {
-            size_t end = u8offset(value, position);
+            const size_t end = u8offset(value, position);
             value.erase(offset, end - offset);
             return true;
         }
@@ -91,8 +91,8 @@ void TextInput::OnRedraw() {
     werase(c);
 
     std::string trimmed;
-    int contentWidth = GetContentWidth();
-    int columns = u8cols(buffer);
+    const int contentWidth = GetContentWidth();
+    const size_t columns = u8cols(buffer);
 
     /* if the string is larger than our width, we gotta trim it for
     display purposes... */
@@ -105,7 +105,7 @@ void TextInput::OnRedraw() {
 
     if (!columns && hintText.size()) {
         /* draw the hint if we have one and there's no string yet */
-        int64_t color = Color(Color::TextDisabled);
+        const int64_t color = Color(Color::TextDisabled);
         wattron(c, color);
         wmove(c, 0, 0);
         checked_waddstr(c, u8substr(hintText, 0, contentWidth).c_str());
@@ -120,7 +120,7 @@ void TextInput::OnRedraw() {
         /* if we're in "Line" mode and the string is short, pad the
         end with a bunch of underscores */
         if (style == StyleLine) {
-            int remaining = contentWidth - columns;
+            const int remaining = contentWidth - columns;
             if (remaining > 0) {
                 trimmed += std::string(remaining, '_');
             }
@@ -132,7 +132,7 @@ void TextInput::OnRedraw() {
     }
 }
 
-size_t TextInput::Length() {
+size_t TextInput::Length() noexcept {
     return this->bufferLength;
 }
 
@@ -180,13 +180,13 @@ bool TextInput::Write(const std::string& key) {
     return false;
 }
 
-void TextInput::SetTruncate(bool truncate) {
+void TextInput::SetTruncate(bool truncate) noexcept {
     if (this->truncate != truncate) {
         this->truncate = truncate;
     }
 }
 
-void TextInput::SetEnterEnabled(bool enabled) {
+void TextInput::SetEnterEnabled(bool enabled) noexcept {
     this->enterEnabled = enabled;
 }
 
