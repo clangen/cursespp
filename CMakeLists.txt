@@ -33,7 +33,7 @@ endif()
 # "/usr/local" doesn't seem to be included by default on macOS 10.12+
 if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
   link_directories ("/usr/local/lib")
-  link_directories ("/usr/local/opt/openssl/lib")
+  link_directories ("/usr/local/opt/ncurses/lib")
   include_directories("/usr/local/include")
   include_directories("/usr/local/opt/ncurses/include")
 endif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
