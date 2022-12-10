@@ -38,6 +38,7 @@
 #include <cursespp/IWindow.h>
 #include <cursespp/INavigationKeys.h>
 #include <f8n/runtime/IMessageQueue.h>
+#include <sigslot/sigslot.h>
 
 #ifdef WIN32
     #if defined(PDCURSES_WINCON) || defined(_CONSOLE)
