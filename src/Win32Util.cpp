@@ -136,7 +136,6 @@ static void restoreFromTray(HWND hwnd) {
     Shell_NotifyIcon(NIM_DELETE, trayIcon.get());
     minimizedToTray = false;
     ShowWindow(hwnd, SW_SHOWNORMAL);
-
 }
 
 static void resetMutex() {

@@ -61,6 +61,8 @@ namespace cursespp {
             static const int kFirstReservedMessageId;
             static const int kLastReservedMessageId;
 
+            sigslot::signal2<Window*, const IMouseHandler::Event*> MouseEvent;
+
             Window(IWindow* parent = nullptr);
             virtual ~Window();
 
@@ -137,7 +139,7 @@ namespace cursespp {
             bool HasBadBounds() noexcept { return this->badBounds; }
 
             /* IMouseHandler */
-            bool MouseEvent(const IMouseHandler::Event& mouseEvent) override;
+            bool ProcessMouseEvent(const IMouseHandler::Event& mouseEvent) override;
 
         protected:
 

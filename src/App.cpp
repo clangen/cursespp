@@ -113,6 +113,13 @@ static bool isLangUtf8() {
 }
 #endif
 
+#ifdef WIN32
+static void pdcWinguiResizeCallback() {
+    App::Instance().NotifyResized();
+    App::Instance().Layout();
+}
+#endif
+
 /* the way curses represents mouse button state is really gross, and makes it
 annoying to process click events with low latency while also supporting double
 clicks and multiple buttons. this structure is used to maintain and manipulate
@@ -121,7 +128,7 @@ generate button click events for Window instances to handle. beware: kludge
 and hacks below... */
 struct MouseButtonState {
     bool Update(const MEVENT& rawEvent) {
-        const int state = rawEvent.bstate;
+        const mmask_t state = rawEvent.bstate;
         const int x = rawEvent.x;
         const int y = rawEvent.y;
         bool result = false;
@@ -244,6 +251,16 @@ App::App(const std::string& title) {
         throw std::runtime_error("app instance already running!");
     }
 
+#ifndef WIN32
+    if (!isLangUtf8()) {
+        std::cout << "\n\nThis application requires a UTF-8 compatible LANG environment "
+        "variable to be set in the controlling terminal. Setting to C.UTF-8. Depending on "
+        "your environment, you may see corrupted output. If that'st he case, try to set "
+        "LANG=C.UTF-8 before starting musikcube.\n\n\n\n";
+        setenv("LANG", "C.UTF-8", 1);
+    }
+#endif
+
     instance = this; /* only one instance. */
     this->quit = false;
     this->minWidth = this->minHeight = 0;
@@ -290,8 +307,8 @@ void App::InitCurses() {
     #ifdef PDCURSES_WINGUI
         /* needs to happen after initscr() */
         PDC_set_default_menu_visibility(0);
+        PDC_set_window_resized_callback(&pdcWinguiResizeCallback);
         PDC_set_title(this->appTitle.c_str());
-        PDC_set_color_intensify_enabled(false);
         win32::InterceptWndProc();
         win32::SetAppTitle(this->appTitle);
         if (this->iconId) {
@@ -322,9 +339,6 @@ void App::SetResizeHandler(ResizeHandler handler) {
 }
 
 void App::SetColorMode(Colors::Mode mode) {
-#if defined(PDCURSES_WINCON)
-    mode = Colors::Basic;
-#endif
     this->colorMode = mode;
     if (this->initialized) {
         Colors::Init(this->colorMode, this->bgType);
@@ -494,12 +508,6 @@ void App::Run(ILayoutPtr layout) {
     if (App::Running(this->uniqueId, this->appTitle)) {
         return;
     }
-#else
-    if (!isLangUtf8()) {
-        std::cout << "\n\nThis application requires a UTF-8 compatible LANG environment "
-        "variable to be set in the controlling terminal. Exiting.\n\n\n";
-        return;
-    }
 #endif
 
     int64_t ch;
@@ -574,12 +582,12 @@ process:
                         Event event(rawMouseEvent, window);
                         if (event.MouseWheelDown() || event.MouseWheelUp()) {
                             if (state.focused) {
-                                state.focused->MouseEvent(event);
+                                state.focused->ProcessMouseEvent(event);
                             }
                         }
                         else if (mouseButtonState.Update(rawMouseEvent)) {
                             event.state = mouseButtonState.ToCursesState();
-                            active->MouseEvent(event);
+                            active->ProcessMouseEvent(event);
                         }
                     }
                 }
@@ -597,43 +605,48 @@ process:
             }
         }
 
-        resized |= lastWidth != Screen::GetWidth() || lastHeight != Screen::GetHeight();
-
+        resized |= 
+            lastWidth != Screen::GetWidth() ||
+            lastHeight != Screen::GetHeight();
         if (resized) {
-            resized = false;
             lastWidth = Screen::GetWidth();
             lastHeight = Screen::GetHeight();
-
-            resize_term(0, 0);
-
-            Window::InvalidateScreen();
-
-            if (this->resizeHandler) {
-                this->resizeHandler();
-            }
-
-            this->OnResized();
+            this->NotifyResized();
         }
 
-        this->CheckShowOverlay();
-        this->EnsureFocusIsValid();
-
-        /* we want to dispatch messages here, before we call WriteToScreen(),
-        because dispatched messages may trigger UI updates, including layouts,
-        which may lead panels to get destroyed and recreated, which can
-        cause the screen to redraw outside of do_update() calls. so we dispatch
-        messages, ensure our overlay is on top, then do a redraw. */
-        Window::MessageQueue().Dispatch();
-
-        if (this->state.overlayWindow) {
-            this->state.overlay->BringToTop(); /* active overlay is always on top... */
-        }
-
-        /* always last to avoid flicker. see above. */
-        Window::WriteToScreen(this->state.input);
+        this->Layout();
     }
 
     overlays.Clear();
+}
+
+void App::NotifyResized() {
+    resized = false;
+    resize_term(0, 0);
+    Window::InvalidateScreen();
+    if (this->resizeHandler) {
+        this->resizeHandler();
+    }
+    this->OnResized();
+}
+
+void App::Layout() {
+    this->CheckShowOverlay();
+    this->EnsureFocusIsValid();
+
+    /* we want to dispatch messages here, before we call WriteToScreen(),
+    because dispatched messages may trigger UI updates, including layouts,
+    which may lead panels to get destroyed and recreated, which can
+    cause the screen to redraw outside of do_update() calls. so we dispatch
+    messages, ensure our overlay is on top, then do a redraw. */
+    Window::MessageQueue().Dispatch();
+
+    if (this->state.overlayWindow) {
+        this->state.overlay->BringToTop(); /* active overlay is always on top... */
+    }
+
+    /* always last to avoid flicker. see above. */
+    Window::WriteToScreen(this->state.input);
 }
 
 void App::UpdateFocusedWindow(IWindowPtr window) {

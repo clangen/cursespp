@@ -107,6 +107,7 @@ static inline void DrawCursor(IInput* input) {
                 const int targetY = 0;
                 const int targetX = (int) input->Position();
                 wmove(content, targetY, targetX);
+                wnoutrefresh(content);
             }
             return;
         }
@@ -133,8 +134,8 @@ bool Window::WriteToScreen(IInput* input) {
     if (drawPending && !freeze) {
         drawPending = false;
         update_panels();
-        doupdate();
         DrawCursor(input);
+        doupdate();
         return true;
     }
     else if (freeze) {
@@ -329,7 +330,9 @@ void Window::MoveAndResize(int x, int y, int width, int height) {
         this->lastAbsoluteY = absY;
         this->width = width;
         this->height = height;
-        this->RecreateForUpdatedDimensions();
+        if (this->isVisibleInParent) {
+            this->RecreateForUpdatedDimensions();
+        }
     }
     else {
         this->DestroyIfBadBounds();
@@ -618,7 +621,7 @@ void Window::Show() {
             }
         }
         else {
-            this->Create();
+            this->RecreateForUpdatedDimensions();
             this->isVisibleInParent = true;
         }
 
@@ -967,7 +970,8 @@ void Window::SetNavigationKeys(std::shared_ptr<INavigationKeys> keys) {
     ::keys = keys;
 }
 
-bool Window::MouseEvent(const IMouseHandler::Event& mouseEvent) {
+bool Window::ProcessMouseEvent(const IMouseHandler::Event& mouseEvent) {
+    this->MouseEvent(this, &mouseEvent);
     return false;
 }
 
