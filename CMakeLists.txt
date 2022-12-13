@@ -78,6 +78,8 @@ else (CMAKE_SYSTEM_NAME MATCHES "Linux")
   target_link_libraries(cursespp curses panel f8n)
 endif (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
+target_include_directories(cursespp BEFORE PRIVATE ${VENDOR_INCLUDE_DIRECTORIES})
+
 file(GLOB sdk_headers "src/*.h")
 
 install(
