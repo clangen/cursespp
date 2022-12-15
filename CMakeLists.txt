@@ -22,15 +22,7 @@ if (EXISTS "/etc/arch-release" OR EXISTS "/etc/manjaro-release" OR NO_NCURSESW)
   add_definitions (-DNO_NCURSESW)
 elseif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
   add_definitions (-DNO_NCURSESW)
-endif()
-
-# "/usr/local" doesn't seem to be included by default on macOS 10.12+
-if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-  link_directories ("/usr/local/lib")
-  link_directories ("/usr/local/opt/ncurses/lib")
-  include_directories("/usr/local/include")
-  include_directories("/usr/local/opt/ncurses/include")
-endif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+endif ()
 
 set (CURSESPP_SRCS
   ./src/App.cpp
