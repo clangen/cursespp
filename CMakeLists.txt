@@ -12,12 +12,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC -O2")
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/Modules)
-
-# SET (CMAKE_BUILD_TYPE DEBUG)
-set (LIBRARY_OUTPUT_PATH ${cursespp_SOURCE_DIR}/__output)
-
 include_directories (
   "${cursespp_SOURCE_DIR}/src"
   "${cursespp_SOURCE_DIR}/f8n/src"
@@ -67,7 +61,7 @@ set (CURSESPP_SRCS
   ./src/Window.cpp
 )
 
-add_library(cursespp STATIC ${CURSESPP_SRCS})
+add_library(cursespp SHARED ${CURSESPP_SRCS})
 
 add_subdirectory("${cursespp_SOURCE_DIR}/f8n")
 add_dependencies(cursespp f8n)
@@ -80,14 +74,14 @@ endif (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 target_include_directories(cursespp BEFORE PRIVATE ${VENDOR_INCLUDE_DIRECTORIES})
 
-file(GLOB sdk_headers "src/*.h")
+# file(GLOB sdk_headers "src/*.h")
 
-install(
-  FILES ${sdk_headers}
-  DESTINATION include/cursespp
-)
+# install(
+#   FILES ${sdk_headers}
+#   DESTINATION include/cursespp
+# )
 
-install(
-  FILES lib/libcursespp.a
-  DESTINATION lib/
-)
+# install(
+#   FILES lib/libcursespp.a
+#   DESTINATION lib/
+# )
