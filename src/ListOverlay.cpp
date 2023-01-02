@@ -32,13 +32,14 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <algorithm>
-#include <functional>
+#include <cursespp/pch.h>
 #include <cursespp/ListOverlay.h>
 #include <cursespp/Scrollbar.h>
 #include <cursespp/Colors.h>
 #include <cursespp/Screen.h>
 #include <cursespp/Text.h>
+#include <algorithm>
+#include <functional>
 
 using namespace cursespp;
 

@@ -32,9 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <algorithm>
+#include <cursespp/pch.h>
 #include <cursespp/Text.h>
 #include <cursespp/MultiLineEntry.h>
+#include <algorithm>
 
 using namespace cursespp;
 

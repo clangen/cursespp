@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <cursespp/AppLayout.h>
 #include <cursespp/Screen.h>
 #include <cursespp/Colors.h>

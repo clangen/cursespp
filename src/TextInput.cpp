@@ -32,12 +32,12 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <limits.h>
-
+#include <cursespp/pch.h>
 #include <cursespp/Screen.h>
 #include <cursespp/Colors.h>
 #include <cursespp/TextInput.h>
 #include <f8n/str/utf.h>
+#include <limits.h>
 
 using namespace cursespp;
 using namespace f8n::utf;

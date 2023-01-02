@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2004-2020 musikcube team
+// Copyright (c) 2004-2021 musikcube team
 //
 // All rights reserved.
 //
@@ -33,17 +33,3 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <cursespp/pch.h>
-#include <cursespp/Screen.h>
-
-using namespace cursespp;
-
-Screen::Screen() {
-}
-
-int Screen::GetWidth() {
-    return getmaxx(stdscr);
-}
-
-int Screen::GetHeight() {
-    return getmaxy(stdscr);
-}

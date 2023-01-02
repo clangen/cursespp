@@ -32,11 +32,11 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <algorithm>
-
+#include <cursespp/pch.h>
 #include <cursespp/ScrollableWindow.h>
 #include <cursespp/Screen.h>
 #include <cursespp/Colors.h>
+#include <algorithm>
 
 using namespace cursespp;
 

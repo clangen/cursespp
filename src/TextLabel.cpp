@@ -32,11 +32,11 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <cursespp/Screen.h>
 #include <cursespp/Colors.h>
 #include <cursespp/Text.h>
 #include <cursespp/ILayout.h>
-
 #include <cursespp/TextLabel.h>
 
 using namespace cursespp;

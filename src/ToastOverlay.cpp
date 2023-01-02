@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <cursespp/App.h>
 #include <cursespp/ToastOverlay.h>
 #include <cursespp/Colors.h>

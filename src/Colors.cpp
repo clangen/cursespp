@@ -32,10 +32,11 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <json.hpp>
+#include <cursespp/pch.h>
 #include <cursespp/Colors.h>
 #include <f8n/environment/Environment.h>
 #include <f8n/environment/Filesystem.h>
+#include <json.hpp>
 #include <set>
 
 using namespace cursespp;

@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <cursespp/SchemaOverlay.h>
 
 #include <f8n/environment/Environment.h>

@@ -1,3 +1,4 @@
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004-2020 musikcube team
@@ -32,18 +33,21 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <cursespp/pch.h>
-#include <cursespp/Screen.h>
+#pragma once
 
-using namespace cursespp;
-
-Screen::Screen() {
-}
-
-int Screen::GetWidth() {
-    return getmaxx(stdscr);
-}
-
-int Screen::GetHeight() {
-    return getmaxy(stdscr);
-}
+#ifdef WIN32
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
+    #ifndef WINVER
+        #define WINVER 0x0601
+    #endif
+    #ifndef _WIN32_WINNT
+        #define _WIN32_WINNT 0x0601
+    #endif
+    #include <windows.h>
+    #include <winrt/Windows.UI.ViewManagement.h>
+#endif

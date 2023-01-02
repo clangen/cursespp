@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <cursespp/ScrollAdapterBase.h>
 #include <cursespp/ScrollableWindow.h>
 #include <cursespp/MultiLineEntry.h>

@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <cursespp/IMouseHandler.h>
 #include <cursespp/IWindow.h>
 

@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <cursespp/ShortcutsWindow.h>
 #include <cursespp/Colors.h>
 #include <cursespp/Text.h>

@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <cursespp/OverlayStack.h>
 #include <cursespp/DialogOverlay.h>
 #include <cursespp/Colors.h>

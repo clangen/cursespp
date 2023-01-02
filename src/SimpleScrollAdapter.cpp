@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <cursespp/SimpleScrollAdapter.h>
 #include <cursespp/SingleLineEntry.h>
 #include <cursespp/MultiLineEntry.h>

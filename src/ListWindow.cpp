@@ -32,9 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <algorithm>
+#include <cursespp/pch.h>
 #include <cursespp/ListWindow.h>
 #include <cursespp/Scrollbar.h>
+#include <algorithm>
 
 using namespace cursespp;
 

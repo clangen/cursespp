@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <cursespp/Window.h>
 #include <cursespp/IWindowGroup.h>
 #include <cursespp/IInput.h>

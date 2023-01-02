@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <cursespp/SingleLineEntry.h>
 #include <cursespp/Text.h>
 #include <f8n/str/utf.h>

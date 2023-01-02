@@ -32,6 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cursespp/pch.h>
 #include <climits>
 #include <algorithm>
 #include <cursespp/LayoutBase.h>
