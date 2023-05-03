@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2004-2020 musikcube team
+// Copyright (c) 2004-2023 musikcube team
 //
 // All rights reserved.
 //
@@ -305,7 +305,7 @@ void App::InitCurses() {
 
 #ifdef WIN32
     PDC_set_function_key(FUNCTION_KEY_SHUT_DOWN, 4);
-    #ifdef PDCURSES_WINGUI
+    #if defined PDCURSES_WINGUI && !defined PDCURSES_WINCON
         /* needs to happen after initscr() */
         PDC_set_default_menu_visibility(0);
         PDC_set_window_resized_callback(&pdcWinguiResizeCallback);
@@ -389,13 +389,13 @@ bool App::RegisterFont(const std::string& filename) {
 }
 
 void App::SetDefaultFontface(const std::string& fontface) {
-#if defined(PDCURSES_WINGUI)
+#if defined(PDCURSES_WINGUI) && !defined(PDCURSES_WINCON)
     PDC_set_preferred_fontface(u8to16(fontface).c_str());
 #endif
 }
 
 void App::SetDefaultMenuVisibility(bool visible) {
-#if defined(PDCURSES_WINGUI)
+#if defined(PDCURSES_WINGUI) && !defined(PDCURSES_WINCON)
     PDC_set_default_menu_visibility(visible);
 #endif
 }
@@ -607,7 +607,7 @@ process:
             }
         }
 
-        resized |= 
+        resized |=
             lastWidth != Screen::GetWidth() ||
             lastHeight != Screen::GetHeight();
         if (resized) {

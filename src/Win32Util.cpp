@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2004-2020 musikcube team
+// Copyright (c) 2004-2023 musikcube team
 //
 // All rights reserved.
 //
@@ -269,6 +269,13 @@ namespace cursespp {
             }
         }
 
+        static bool IsWine() {
+            HMODULE ntdll = LoadLibrary(L"ntdll.dll");
+            bool result = ntdll != nullptr && GetProcAddress(ntdll, "wine_get_version") != nullptr;
+            FreeLibrary(ntdll);
+            return result;
+        }
+
         void ConfigureDpiAwareness() {
             typedef HRESULT(__stdcall *SetProcessDpiAwarenessProc)(int);
             static const int ADJUST_DPI_PER_MONITOR = 2;
@@ -287,20 +294,34 @@ namespace cursespp {
         }
 
         void ConfigureThemeAwareness() {
+            if (IsWine()) {
+                return;
+            }
+
             typedef HRESULT(__stdcall* DwmSetWindowAttributeProc)(HWND, DWORD, LPCVOID, DWORD);
             static const DWORD DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
 
             HMODULE dwmapiDll = LoadLibrary(L"dwmapi.dll");
             if (dwmapiDll) {
                 DwmSetWindowAttributeProc dwmSetWindowAttribute =
-                    (DwmSetWindowAttributeProc)GetProcAddress(dwmapiDll, "DwmSetWindowAttribute");
+                    (DwmSetWindowAttributeProc) GetProcAddress(dwmapiDll, "DwmSetWindowAttribute");
 
                 if (dwmSetWindowAttribute) {
                     const auto settings = UISettings();
                     const auto foreground = settings.GetColorValue(UIColorType::Foreground);
-                    BOOL isDarkMode = (((5 * foreground.G) + (2 * foreground.R) + foreground.B) > (8 * 128));
+                    const BOOL isDarkMode = (((5 * foreground.G) + (2 * foreground.R) + foreground.B) > (8 * 128));
                     HWND mainHwnd = GetMainWindow();
                     dwmSetWindowAttribute(mainHwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &isDarkMode, sizeof(isDarkMode));
+                    /* on some versions of Windows this doesn't redraw immediately; this hack very slightly resizes
+                    the window to force a repaint... no amount of UpdateWindow/RedrawWindow/etc would do the trick */
+                    RECT rect = { 0 };
+                    GetWindowRect(mainWindow, &rect);
+                    SetWindowPos(
+                        mainWindow,
+                        0,
+                        rect.left, rect.top,
+                        rect.right - rect.left, rect.bottom - rect.top + 1,
+                        SWP_DRAWFRAME | SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
                 }
 
                 FreeLibrary(dwmapiDll);

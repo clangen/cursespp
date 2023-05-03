@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2004-2020 musikcube team
+// Copyright (c) 2004-2023 musikcube team
 //
 // All rights reserved.
 //
@@ -332,7 +332,7 @@ namespace cursespp {
                     kn = std::string("M-") + std::string(keyname((int)next));
                 }
             }
-        #ifdef WIN32
+#ifdef WIN32
             /* transform alt->meta for uniform handling */
             else if (kn.find("ALT_") == 0) {
                 std::transform(kn.begin(), kn.end(), kn.begin(), tolower);

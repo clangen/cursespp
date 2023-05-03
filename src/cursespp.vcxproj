@@ -169,7 +169,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>Default</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\f8n\src\3rdparty\include\;$(ProjectDir)..\f8n\src\3rdparty\win32_include\;$(ProjectDir)..\f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;PDCURSES_WINGUI;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;PDCURSES_WINGUI;PDC_DISABLE_MULTIBYTE;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -185,7 +185,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>Default</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\f8n\src\3rdparty\include\;$(ProjectDir)..\f8n\src\3rdparty\win32_include\;$(ProjectDir)..\f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;PDCURSES_WINGUI;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;PDCURSES_WINGUI;PDC_DISABLE_MULTIBYTE;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -202,7 +202,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>Default</ConformanceMode>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;PDCURSES_WINGUI;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;PDCURSES_WINGUI;PDC_DISABLE_MULTIBYTE;</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\f8n\src\3rdparty\include\;$(ProjectDir)..\f8n\src\3rdparty\win32_include\;$(ProjectDir)..\f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -224,7 +224,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>Default</ConformanceMode>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;PDCURSES_WINGUI;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;WIN32_LEAN_AND_MEAN;NOMINMAX;UNICODE;_UNICODE;PDCURSES_WINGUI;PDC_DISABLE_MULTIBYTE;</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\f8n\src\3rdparty\include\;$(ProjectDir)..\f8n\src\3rdparty\win32_include\;$(ProjectDir)..\f8n\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
